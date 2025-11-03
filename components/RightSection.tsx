@@ -75,12 +75,18 @@ function RightSection({
 
     // Handle scenario path drawing (when activeScenario is set)
     if (activeScenario && selectedAddress.doorPosition && !pendingPathConfirmation) {
-      // Add point immediately to show line (no confirmation UI per click)
+      // Add point immediately to show line
       const newPoints = currentPathPoints.length === 0 
         ? [{ lat: selectedAddress.doorPosition.lat, lng: selectedAddress.doorPosition.lng }, { lat, lng }]
         : [...currentPathPoints, { lat, lng }]
       
       setCurrentPathPoints(newPoints)
+      
+      // Show confirmation UI on first click
+      if (currentPathPoints.length === 0) {
+        setPendingPathConfirmation({ x: window.innerWidth / 2, y: window.innerHeight / 2 })
+      }
+      
       setMousePosition(null)
       return
     }
@@ -139,9 +145,19 @@ function RightSection({
   }, [selectedAddressId, activeScenario, currentPathPoints, selectedAddress, onUpdateAddress])
 
   const handleCancelFinishPath = useCallback(() => {
-    // Just hide the confirmation UI, don't save the path
-    setPendingPathConfirmation(null)
-  }, [])
+    // Remove the last point from current path
+    if (currentPathPoints.length > 0) {
+      if (currentPathPoints.length === 2) {
+        // Only door position and first click, clear everything and hide UI
+        setCurrentPathPoints([])
+        setPendingPathConfirmation(null)
+      } else if (currentPathPoints.length > 2) {
+        // Remove just the last clicked point (keep door position and previous points)
+        setCurrentPathPoints(currentPathPoints.slice(0, -1))
+        // Keep UI visible for further editing
+      }
+    }
+  }, [currentPathPoints])
 
   return (
     <div className="w-[70%] h-full flex bg-white rounded-lg shadow-lg overflow-hidden gap-2 p-2 min-w-0">
