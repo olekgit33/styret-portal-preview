@@ -588,17 +588,35 @@ function WizardView({
             <span className="text-slate-700 group-hover:text-blue-700 transition-colors">Prev</span>
           </button>
 
-          {/* Address Progress Indicator */}
+          {/* Address Status Indicator */}
           <div className="flex items-center gap-2 px-3 py-2 bg-white/90 backdrop-blur-sm rounded-full border border-slate-200/60 shadow-[0_2px_8px_rgba(0,0,0,0.06)] ring-1 ring-slate-100/50">
             <div className="flex items-center gap-2">
-              <div className="w-6 h-6 bg-gradient-to-br from-blue-500 via-indigo-500 to-purple-600 rounded-full flex items-center justify-center shadow-[0_2px_8px_rgba(59,130,246,0.4)] ring-1 ring-blue-200/50">
-                <svg className="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
+              <div className={`w-6 h-6 rounded-full flex items-center justify-center shadow-[0_2px_8px_rgba(0,0,0,0.15)] ring-1 ${
+                completedCount === totalAddresses && totalAddresses > 0
+                  ? 'bg-gradient-to-br from-emerald-500 via-green-500 to-teal-600 ring-emerald-200/50'
+                  : completedCount > 0
+                  ? 'bg-gradient-to-br from-blue-500 via-indigo-500 to-purple-600 ring-blue-200/50'
+                  : 'bg-gradient-to-br from-slate-400 to-slate-500 ring-slate-200/50'
+              }`}>
+                {completedCount === totalAddresses && totalAddresses > 0 ? (
+                  <svg className="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                ) : (
+                  <svg className="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                  </svg>
+                )}
               </div>
               <div className="text-left">
                 <div className="text-[10px] text-slate-500 font-semibold uppercase tracking-wide"></div>
-                <div className="text-xs font-bold text-slate-900">
+                <div className={`text-xs font-bold ${
+                  completedCount === totalAddresses && totalAddresses > 0
+                    ? 'text-emerald-700'
+                    : completedCount > 0
+                    ? 'text-blue-700'
+                    : 'text-slate-700'
+                }`}>
                   {completedCount}/{totalAddresses}
                 </div>
               </div>
