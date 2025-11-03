@@ -17,6 +17,7 @@ export interface Address {
   selectedAddress?: string
   coordinates?: { lat: number; lng: number } // Coordinates for the address location
   doorPosition?: { lat: number; lng: number }
+  hasElevator?: boolean
   selectedScenarios: ScenarioType[]
   parkingSpotSet?: boolean
   pendingDoorPosition?: { lat: number; lng: number }

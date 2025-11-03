@@ -4,6 +4,7 @@ import { useState, memo, useCallback, useEffect } from 'react'
 import dynamic from 'next/dynamic'
 import { Address, ScenarioType } from '@/types'
 import DoorConfirmation from './DoorConfirmation'
+import ElevatorModal from './ElevatorModal'
 
 // Dynamically import MapContainer to avoid SSR issues with Leaflet
 const MapContainer = dynamic(() => import('./MapContainer'), { ssr: false })
@@ -34,7 +35,9 @@ function RightSection({
   const [pendingDoorPosition, setPendingDoorPosition] = useState<{ lat: number; lng: number; x: number; y: number } | null>(null)
   const [currentPathPoints, setCurrentPathPoints] = useState<{ lat: number; lng: number }[]>([])
   const [pendingPathConfirmation, setPendingPathConfirmation] = useState<{ x: number; y: number } | null>(null)
-  const [lastPathClickPosition, setLastPathClickPosition] = useState<{ x: number; y: number } | null>(null)
+  const [pathPointPositions, setPathPointPositions] = useState<{ x: number; y: number }[]>([])
+  const [showElevatorModal, setShowElevatorModal] = useState(false)
+  const [pendingDoorForElevator, setPendingDoorForElevator] = useState<{ lat: number; lng: number } | null>(null)
   
   // Auto-place door at center when editing starts
   useEffect(() => {
@@ -85,10 +88,10 @@ function RightSection({
     // Update mouse position for door placement or path drawing
     if (selectedAddress &&
       (selectedAddress.validatedAddress || selectedAddress.selectedAddress) &&
-      ((!selectedAddress.doorPosition || isEditingDoor || activeScenario) && !pendingDoorPosition && !pendingPathConfirmation)) {
+      ((!selectedAddress.doorPosition || isEditingDoor || activeScenario) && !pendingDoorPosition)) {
       setMousePosition({ x: e.clientX, y: e.clientY })
     }
-  }, [selectedAddress, pendingDoorPosition, pendingPathConfirmation, isEditingDoor, activeScenario])
+  }, [selectedAddress, pendingDoorPosition, isEditingDoor, activeScenario])
 
   const handleMapClick = useCallback((lat: number, lng: number, mapType: 'outline' | 'satellite' | 'street') => {
     if (!selectedAddress || !selectedAddressId) return
@@ -104,7 +107,7 @@ function RightSection({
     }
 
     // Handle scenario path drawing (when activeScenario is set)
-    if (activeScenario && selectedAddress.doorPosition && !pendingPathConfirmation) {
+    if (activeScenario && selectedAddress.doorPosition && !pendingDoorPosition) {
       // Add point immediately to show line
       const newPoints = currentPathPoints.length === 0 
         ? [{ lat: selectedAddress.doorPosition.lat, lng: selectedAddress.doorPosition.lng }, { lat, lng }]
@@ -112,10 +115,16 @@ function RightSection({
       
       setCurrentPathPoints(newPoints)
       
-      // Store the last click position for showing confirmation UI
-      if (mousePosition) {
-        setLastPathClickPosition(mousePosition)
-      }
+      // Store screen position for this point
+      const clickPosition = mousePosition || { x: window.innerWidth / 2, y: window.innerHeight / 2 }
+      const newPositions = currentPathPoints.length === 0
+        ? [clickPosition, clickPosition] // Door position and first click
+        : [...pathPointPositions, clickPosition]
+      
+      setPathPointPositions(newPositions)
+      
+      // Show confirmation UI immediately at the clicked position
+      setPendingPathConfirmation(clickPosition)
       
       setMousePosition(null)
       return
@@ -160,25 +169,46 @@ function RightSection({
 
   const handleConfirmDoor = useCallback(() => {
     if (!selectedAddressId || !pendingDoorPosition) return
-    onUpdateAddress(selectedAddressId, { doorPosition: { lat: pendingDoorPosition.lat, lng: pendingDoorPosition.lng } })
+    // Store door position and show elevator modal
+    setPendingDoorForElevator({ lat: pendingDoorPosition.lat, lng: pendingDoorPosition.lng })
     setPendingDoorPosition(null)
     setIsMouseOverMap(false)
     setMousePosition(null)
+    setShowElevatorModal(true)
+  }, [selectedAddressId, pendingDoorPosition])
+
+  const handleElevatorYes = useCallback(() => {
+    if (!selectedAddressId || !pendingDoorForElevator) return
+    onUpdateAddress(selectedAddressId, { 
+      doorPosition: pendingDoorForElevator,
+      hasElevator: true 
+    })
+    setPendingDoorForElevator(null)
+    setShowElevatorModal(false)
     // Turn off editing mode after confirming
     if (onEditDoorChange) {
       onEditDoorChange(false)
     }
-  }, [selectedAddressId, pendingDoorPosition, onUpdateAddress, onEditDoorChange])
+  }, [selectedAddressId, pendingDoorForElevator, onUpdateAddress, onEditDoorChange])
+
+  const handleElevatorNo = useCallback(() => {
+    if (!selectedAddressId || !pendingDoorForElevator) return
+    onUpdateAddress(selectedAddressId, { 
+      doorPosition: pendingDoorForElevator,
+      hasElevator: false 
+    })
+    setPendingDoorForElevator(null)
+    setShowElevatorModal(false)
+    // Turn off editing mode after confirming
+    if (onEditDoorChange) {
+      onEditDoorChange(false)
+    }
+  }, [selectedAddressId, pendingDoorForElevator, onUpdateAddress, onEditDoorChange])
 
   const handleCancelDoor = useCallback(() => {
     setPendingDoorPosition(null)
     setMousePosition(null)
   }, [])
-
-  const handleShowFinishConfirmation = useCallback(() => {
-    // Show confirmation UI at the last clicked position (or center if no position stored)
-    setPendingPathConfirmation(lastPathClickPosition || { x: window.innerWidth / 2, y: window.innerHeight / 2 })
-  }, [lastPathClickPosition])
 
   const handleConfirmFinishPath = useCallback(() => {
     if (!selectedAddressId || !activeScenario || currentPathPoints.length === 0) return
@@ -196,7 +226,7 @@ function RightSection({
     // Clear current path and hide confirmation UI
     setCurrentPathPoints([])
     setPendingPathConfirmation(null)
-    setLastPathClickPosition(null)
+    setPathPointPositions([])
     
     // Exit draw mode after completing one path
     if (onScenarioSelect) {
@@ -211,14 +241,20 @@ function RightSection({
         // Only door position and first click, clear everything and hide UI
         setCurrentPathPoints([])
         setPendingPathConfirmation(null)
-        setLastPathClickPosition(null)
+        setPathPointPositions([])
       } else if (currentPathPoints.length > 2) {
         // Remove just the last clicked point (keep door position and previous points)
-        setCurrentPathPoints(currentPathPoints.slice(0, -1))
-        setPendingPathConfirmation(null)
+        const updatedPoints = currentPathPoints.slice(0, -1)
+        const updatedPositions = pathPointPositions.slice(0, -1)
+        setCurrentPathPoints(updatedPoints)
+        setPathPointPositions(updatedPositions)
+        // Move confirmation UI to the previous point's position
+        if (updatedPositions.length > 0) {
+          setPendingPathConfirmation(updatedPositions[updatedPositions.length - 1])
+        }
       }
     }
-  }, [currentPathPoints])
+  }, [currentPathPoints, pathPointPositions])
 
   return (
     <div className="w-[70%] h-full flex bg-white rounded-lg shadow-lg overflow-hidden min-w-0">
@@ -257,7 +293,7 @@ function RightSection({
       )}
 
       {/* Path Drawing Cursor - shows when a scenario is selected */}
-      {activeScenario && isMouseOverMap && selectedAddress?.doorPosition && mousePosition && !pendingPathConfirmation && (
+      {activeScenario && isMouseOverMap && selectedAddress?.doorPosition && mousePosition && (
         <div
           className="fixed w-6 h-6 pointer-events-none z-[9999] text-2xl"
           style={{
@@ -278,24 +314,20 @@ function RightSection({
         />
       )}
 
-      {/* Finish Path Button */}
-      {currentPathPoints.length > 0 && activeScenario && !pendingPathConfirmation && (
-        <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-[10001]">
-          <button
-            onClick={handleShowFinishConfirmation}
-            className="px-6 py-3 bg-primary-500 text-white rounded-lg shadow-lg hover:bg-primary-600 transition-colors font-semibold"
-          >
-            ✓ Finish Path
-          </button>
-        </div>
-      )}
-
       {/* Path Finish Confirmation UI */}
       {pendingPathConfirmation && (
         <DoorConfirmation
           position={{ x: pendingPathConfirmation.x, y: pendingPathConfirmation.y }}
           onConfirm={handleConfirmFinishPath}
           onCancel={handleCancelFinishPath}
+        />
+      )}
+
+      {/* Elevator Modal */}
+      {showElevatorModal && (
+        <ElevatorModal
+          onYes={handleElevatorYes}
+          onNo={handleElevatorNo}
         />
       )}
     </div>

@@ -339,7 +339,7 @@ function WizardView({
 
       {/* Category Progress Bar */}
       <div className="flex-shrink-0">
-        <ProgressBar completedCount={categoryProgress.completed} totalCount={categoryProgress.total} label="Categories"/>
+        <ProgressBar completedCount={categoryProgress.completed} totalCount={categoryProgress.total} label="Steps"/>
       </div>
 
       {/* Wizard Steps - Scrollable Section */}
