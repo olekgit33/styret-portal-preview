@@ -148,8 +148,13 @@ function RightSection({
     if (pendingDoorPosition) {
       // Update pending door position after drag
       setPendingDoorPosition({ ...pendingDoorPosition, lat, lng })
+    } else if (selectedAddressId && selectedAddress?.doorPosition) {
+      // Update confirmed door position after drag
+      onUpdateAddress(selectedAddressId, { 
+        doorPosition: { lat, lng }
+      })
     }
-  }, [pendingDoorPosition])
+  }, [pendingDoorPosition, selectedAddressId, selectedAddress, onUpdateAddress])
 
   const handleScreenPositionUpdate = useCallback((lat: number, lng: number, screenPos: { x: number; y: number }) => {
     if (pendingDoorPosition) {

@@ -287,13 +287,13 @@ export default function MapContainer({
           />
         )}
         
-        {/* Confirmed door position (green) */}
+        {/* Confirmed door position (green) - always draggable */}
         {selectedAddress?.doorPosition && !pendingDoorPosition && (
           <DraggableDoorMarker
             position={[selectedAddress.doorPosition.lat, selectedAddress.doorPosition.lng]}
             icon={doorIcon}
             onDragEnd={onDoorDragEnd}
-            isEditing={isEditingDoor}
+            isEditing={true}
           />
         )}
         
