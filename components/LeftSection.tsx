@@ -67,10 +67,10 @@ function LeftSection({
           <ProgressBar completedCount={completedCount} totalCount={totalAddresses} />
         )}
 
-        <div className="flex-1 relative overflow-hidden">
+        <div className="flex-1 relative overflow-hidden min-h-0">
           {/* Address List View */}
           <div
-            className={`absolute inset-0 transition-transform duration-300 ease-in-out ${
+            className={`absolute inset-0 h-full w-full transition-transform duration-300 ease-in-out ${
               showWizard ? '-translate-x-full opacity-0' : 'translate-x-0 opacity-100'
             } ${isTransitioning ? 'pointer-events-none' : ''}`}
           >

@@ -58,3 +58,48 @@ body {
     transform: scale(1.25);
   }
 }
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* Custom scrollbar for address list - always visible */
+.address-list-scroll {
+  scrollbar-width: auto;
+  scrollbar-color: #64748b #f1f5f9;
+  padding-right: 4px !important;
+  overflow-y: scroll !important;
+}
+
+.address-list-scroll::-webkit-scrollbar {
+  width: 12px;
+}
+
+.address-list-scroll::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 10px;
+  margin: 4px 0;
+  border: 1px solid #e2e8f0;
+}
+
+.address-list-scroll::-webkit-scrollbar-thumb {
+  background: linear-gradient(to bottom, #64748b, #475569);
+  border-radius: 10px;
+  border: 2px solid #f1f5f9;
+  min-height: 50px;
+  box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.1);
+}
+
+.address-list-scroll::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(to bottom, #475569, #334155);
+  box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.15);
+}
+
+.address-list-scroll::-webkit-scrollbar-thumb:active {
+  background: linear-gradient(to bottom, #334155, #1e293b);
+}

@@ -122,7 +122,9 @@ function WizardView({
       return { completed, total: CATEGORIES.length }
     }
     
-    if (address.selectedScenarios && address.selectedScenarios.length > 0) {
+    // Check if all scenarios have paths (this is the actual completion condition)
+    const hasAllScenarioPaths = address.scenarioPaths ? SCENARIOS.every(s => address.scenarioPaths?.[s]) : false
+    if (hasAllScenarioPaths) {
       completed++
     } else {
       return { completed, total: CATEGORIES.length }
