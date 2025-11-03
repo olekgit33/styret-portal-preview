@@ -19,6 +19,8 @@ interface LeftSectionProps {
   completedCount: number
   activeScenario?: ScenarioType | null
   onScenarioSelect?: (scenario: ScenarioType | null) => void
+  isEditingDoor?: boolean
+  onEditDoorChange?: (isEditing: boolean) => void
 }
 
 function LeftSection({
@@ -34,6 +36,8 @@ function LeftSection({
   completedCount,
   activeScenario,
   onScenarioSelect,
+  isEditingDoor,
+  onEditDoorChange,
 }: LeftSectionProps) {
   const [isTransitioning, setIsTransitioning] = useState(false)
   const [showWizard, setShowWizard] = useState(false)
@@ -94,6 +98,8 @@ function LeftSection({
                 completedCount={completedCount}
                 activeScenario={activeScenario}
                 onScenarioSelect={onScenarioSelect}
+                isEditingDoor={isEditingDoor}
+                onEditDoorChange={onEditDoorChange}
               />
             </div>
           )}

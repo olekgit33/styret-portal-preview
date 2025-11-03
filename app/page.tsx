@@ -47,6 +47,7 @@ export default function Home() {
   const [addressCoordinates, setAddressCoordinates] = useState<{ lat: number; lng: number } | null>(null)
   const [isGeocoding, setIsGeocoding] = useState(false)
   const [activeScenario, setActiveScenario] = useState<ScenarioType | null>(null)
+  const [isEditingDoor, setIsEditingDoor] = useState(false)
 
   const handleScenarioSelect = useCallback((scenario: ScenarioType | null) => {
     setActiveScenario(scenario)
@@ -160,6 +161,7 @@ export default function Home() {
           onBackToList={() => {
             setSelectedAddressId(null)
             setActiveScenario(null)
+            setIsEditingDoor(false)
           }}
           onUpdateAddress={updateAddress}
           onNavigateAddress={navigateToAddress}
@@ -167,6 +169,8 @@ export default function Home() {
           completedCount={completedCount}
           activeScenario={activeScenario}
           onScenarioSelect={handleScenarioSelect}
+          isEditingDoor={isEditingDoor}
+          onEditDoorChange={setIsEditingDoor}
         />
         <RightSection
           selectedAddress={selectedAddress}
@@ -175,6 +179,8 @@ export default function Home() {
           addressCoordinates={addressCoordinates}
           activeScenario={activeScenario}
           onScenarioSelect={handleScenarioSelect}
+          isEditingDoor={isEditingDoor}
+          onEditDoorChange={setIsEditingDoor}
         />
       </main>
       

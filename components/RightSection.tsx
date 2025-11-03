@@ -15,6 +15,8 @@ interface RightSectionProps {
   addressCoordinates?: { lat: number; lng: number } | null
   activeScenario?: ScenarioType | null
   onScenarioSelect?: (scenario: ScenarioType | null) => void
+  isEditingDoor?: boolean
+  onEditDoorChange?: (isEditing: boolean) => void
 }
 
 function RightSection({
@@ -24,17 +26,18 @@ function RightSection({
   addressCoordinates,
   activeScenario,
   onScenarioSelect,
+  isEditingDoor,
+  onEditDoorChange,
 }: RightSectionProps) {
   const [mousePosition, setMousePosition] = useState<{ x: number; y: number } | null>(null)
   const [isMouseOverMap, setIsMouseOverMap] = useState(false)
   const [pendingDoorPosition, setPendingDoorPosition] = useState<{ lat: number; lng: number; x: number; y: number } | null>(null)
 
-  // Check if we should show door icon (only when Placing Door step is active)
+  // Check if we should show door icon (only when Placing Door step is active or editing door)
   const shouldShowDoor =
     selectedAddress &&
     (selectedAddress.validatedAddress || selectedAddress.selectedAddress) &&
-    !selectedAddress.doorPosition &&
-    !pendingDoorPosition &&
+    ((!selectedAddress.doorPosition || isEditingDoor) && !pendingDoorPosition) &&
     isMouseOverMap
 
   const handleMouseEnter = useCallback(() => {
@@ -50,20 +53,19 @@ function RightSection({
     // Only update mouse position if door placement is active and no pending position
     if (selectedAddress &&
       (selectedAddress.validatedAddress || selectedAddress.selectedAddress) &&
-      !selectedAddress.doorPosition &&
+      (!selectedAddress.doorPosition || isEditingDoor) &&
       !pendingDoorPosition) {
       setMousePosition({ x: e.clientX, y: e.clientY })
     }
-  }, [selectedAddress, pendingDoorPosition])
+  }, [selectedAddress, pendingDoorPosition, isEditingDoor])
 
   const handleMapClick = useCallback((lat: number, lng: number, mapType: 'outline' | 'satellite' | 'street') => {
     if (!selectedAddress || !selectedAddressId) return
 
-    // Handle door placement - show confirmation UI
+    // Handle door placement - show confirmation UI (either first time or when editing)
     if (
       (selectedAddress.validatedAddress || selectedAddress.selectedAddress) &&
-      !selectedAddress.doorPosition &&
-      !pendingDoorPosition
+      ((!selectedAddress.doorPosition || isEditingDoor) && !pendingDoorPosition)
     ) {
       setPendingDoorPosition({ lat, lng, x: mousePosition?.x || window.innerWidth / 2, y: mousePosition?.y || window.innerHeight / 2 })
       setMousePosition(null)
@@ -73,13 +75,14 @@ function RightSection({
     // Handle parking spot placement (only if scenarios are selected)
     if (
       selectedAddress.doorPosition &&
+      !isEditingDoor &&
       selectedAddress.selectedScenarios &&
       selectedAddress.selectedScenarios.length > 0 &&
       !selectedAddress.parkingSpotSet
     ) {
       onUpdateAddress(selectedAddressId, { parkingSpotSet: true })
     }
-  }, [selectedAddress, selectedAddressId, onUpdateAddress, pendingDoorPosition, mousePosition])
+  }, [selectedAddress, selectedAddressId, onUpdateAddress, pendingDoorPosition, mousePosition, isEditingDoor])
 
   const handleConfirmDoor = useCallback(() => {
     if (!selectedAddressId || !pendingDoorPosition) return
@@ -87,7 +90,11 @@ function RightSection({
     setPendingDoorPosition(null)
     setIsMouseOverMap(false)
     setMousePosition(null)
-  }, [selectedAddressId, pendingDoorPosition, onUpdateAddress])
+    // Turn off editing mode after confirming
+    if (onEditDoorChange) {
+      onEditDoorChange(false)
+    }
+  }, [selectedAddressId, pendingDoorPosition, onUpdateAddress, onEditDoorChange])
 
   const handleCancelDoor = useCallback(() => {
     setPendingDoorPosition(null)

@@ -13,6 +13,8 @@ interface WizardViewProps {
   completedCount: number
   activeScenario?: ScenarioType | null
   onScenarioSelect?: (scenario: ScenarioType | null) => void
+  isEditingDoor?: boolean
+  onEditDoorChange?: (isEditing: boolean) => void
 }
 
 const CATEGORIES: Category[] = ['Validation', 'Placing Door', 'Scenarios', 'Parking Spot']
@@ -27,6 +29,8 @@ function WizardView({
   completedCount,
   activeScenario,
   onScenarioSelect,
+  isEditingDoor,
+  onEditDoorChange,
 }: WizardViewProps) {
   const [searchQuery, setSearchQuery] = useState('')
   const [isSelectFocused, setIsSelectFocused] = useState(false)
@@ -223,14 +227,21 @@ function WizardView({
         </div>
 
         {/* Place Door Step */}
-        <div className={`p-4 bg-white rounded-lg border shadow-sm flex flex-col relative ${!doorEnabled ? 'opacity-60 border-gray-200' : 'border-gray-200'}`}>
+        <div 
+          className={`p-4 bg-white rounded-lg border shadow-sm flex flex-col relative ${!doorEnabled ? 'opacity-60 border-gray-200 cursor-not-allowed' : 'border-gray-200 cursor-pointer hover:bg-gray-50'} ${isEditingDoor ? 'ring-2 ring-primary-500' : ''}`}
+          onClick={() => {
+            if (doorEnabled && onEditDoorChange) {
+              onEditDoorChange(!isEditingDoor)
+            }
+          }}
+        >
           {isStepCompleted(2) && (
             <div className="absolute top-2 right-2 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
               <span className="text-white text-xs font-bold">✓</span>
             </div>
           )}
           <div className="flex items-center text-lg font-semibold mb-2">
-            {getActiveStep() === 2 && (
+            {(getActiveStep() === 2 || isEditingDoor) && (
               <span className="mr-2 text-primary-500">▶</span>
             )}
             <span>Step 2. Placing Door</span>
@@ -238,7 +249,7 @@ function WizardView({
           <div className="text-sm text-gray-600 flex-1 flex items-center">
             {address.doorPosition ? (
               <div className="text-green-500">
-                ✓ Door placed at coordinates: {address.doorPosition.lat.toFixed(6)}, {address.doorPosition.lng.toFixed(6)}
+                {isEditingDoor ? 'Click on the map to change the door position' : '✓ Door placed at coordinates: ' + address.doorPosition.lat.toFixed(6) + ', ' + address.doorPosition.lng.toFixed(6)}
               </div>
             ) : (
               <div>
