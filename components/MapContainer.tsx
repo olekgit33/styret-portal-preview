@@ -87,7 +87,7 @@ function ScreenPositionUpdater({
     onScreenPositionUpdate(pendingDoorPosition.lat, pendingDoorPosition.lng, { x: screenX, y: screenY })
   }, [pendingDoorPosition, map, onScreenPositionUpdate])
   
-  // Also update on map move/zoom
+  // Update on map moveend/zoomend (only after movement stops)
   useEffect(() => {
     if (!pendingDoorPosition || !onScreenPositionUpdate) return
     
@@ -103,12 +103,13 @@ function ScreenPositionUpdater({
       onScreenPositionUpdate(pendingDoorPosition.lat, pendingDoorPosition.lng, { x: screenX, y: screenY })
     }
     
-    map.on('move', updatePosition)
-    map.on('zoom', updatePosition)
+    // Use moveend/zoomend instead of move/zoom to avoid constant updates during panning
+    map.on('moveend', updatePosition)
+    map.on('zoomend', updatePosition)
     
     return () => {
-      map.off('move', updatePosition)
-      map.off('zoom', updatePosition)
+      map.off('moveend', updatePosition)
+      map.off('zoomend', updatePosition)
     }
   }, [pendingDoorPosition, map, onScreenPositionUpdate])
   
@@ -296,13 +297,13 @@ export default function MapContainer({
           />
         )}
         
-        {/* Pending door position (orange) - draggable when editing */}
+        {/* Pending door position (orange) - always draggable while pending */}
         {pendingDoorPosition && (
           <DraggableDoorMarker
             position={[pendingDoorPosition.lat, pendingDoorPosition.lng]}
             icon={pendingDoorIcon}
             onDragEnd={onDoorDragEnd}
-            isEditing={isEditingDoor || false}
+            isEditing={true}
             onScreenPositionUpdate={mapType === 'outline' ? onScreenPositionUpdate || undefined : undefined}
           />
         )}
