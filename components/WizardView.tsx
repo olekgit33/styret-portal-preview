@@ -172,52 +172,40 @@ function WizardView({
       </div>
 
       {/* Current Address Section */}
-      <div className="flex-shrink-0 px-4 py-4 bg-gradient-to-br from-blue-50 to-indigo-50 border-b border-gray-200">
+      <div className="flex-shrink-0 px-4 py-3 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-gray-200">
         <div className="flex items-start gap-3">
-          <div className="flex-shrink-0 w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center shadow-sm">
-            <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <div className="flex-shrink-0 w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center shadow-sm">
+            <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
             </svg>
           </div>
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-2">
+          <div className="flex-1 min-w-0 space-y-1.5">
+            <div className="flex items-center gap-2">
               <span className="text-xs font-semibold text-blue-700 uppercase tracking-wide">Address</span>
               {address.validatedAddress && (
                 <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                  <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                  <svg className="w-3 h-3 mr-0.5" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                   </svg>
                   Validated
                 </span>
               )}
             </div>
-            <div className="space-y-2">
-              <div className="bg-white rounded-lg px-3 py-2 border border-gray-200 shadow-sm">
-                <div className="flex items-start gap-2">
-                  <svg className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                  </svg>
-                  <div className="flex-1 min-w-0">
-                    <div className="text-xs text-gray-500 font-medium mb-0.5">Original</div>
-                    <div className="text-sm font-semibold text-gray-900 break-words">{address.givenAddress}</div>
-                  </div>
+            <div className="bg-white rounded px-2 py-1.5 border border-gray-200 shadow-sm">
+              <div className="text-xs text-gray-500 font-medium mb-0.5">Original</div>
+              <div className="text-sm text-gray-900 truncate" title={address.givenAddress}>
+                {address.givenAddress}
+              </div>
+            </div>
+            {address.validatedAddress && (
+              <div className="bg-green-50 rounded px-2 py-1.5 border border-green-200 shadow-sm">
+                <div className="text-xs text-green-700 font-medium mb-0.5">Validated</div>
+                <div className="text-sm font-semibold text-green-900 truncate" title={address.validatedAddress}>
+                  {address.validatedAddress}
                 </div>
               </div>
-              {address.validatedAddress && (
-                <div className="bg-green-50 rounded-lg px-3 py-2 border border-green-200 shadow-sm">
-                  <div className="flex items-start gap-2">
-                    <svg className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    <div className="flex-1 min-w-0">
-                      <div className="text-xs text-green-700 font-medium mb-0.5">Validated</div>
-                      <div className="text-sm font-semibold text-green-900 break-words">{address.validatedAddress}</div>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
+            )}
           </div>
         </div>
       </div>
@@ -263,7 +251,7 @@ function WizardView({
 
         {/* Place Door Step */}
         <div 
-          className={`p-4 bg-white rounded-lg border shadow-sm flex flex-col relative ${!doorEnabled ? 'opacity-60 border-gray-200 cursor-not-allowed' : 'border-gray-200 cursor-pointer hover:bg-gray-50'} ${isEditingDoor ? 'ring-2 ring-primary-500' : ''}`}
+          className={`p-4 bg-white rounded-lg border shadow-sm flex flex-col relative ${!doorEnabled ? 'opacity-60 border-gray-200 cursor-not-allowed' : 'border-gray-200 cursor-pointer hover:bg-gray-50'}`}
           onClick={() => {
             if (doorEnabled && onEditDoorChange) {
               onEditDoorChange(!isEditingDoor)
