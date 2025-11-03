@@ -68,6 +68,26 @@ body {
   }
 }
 
+@keyframes slideInLeft {
+  0% {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes bounceLeft {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(-4px);
+  }
+}
+
 /* Custom scrollbar for address list - always visible */
 .address-list-scroll {
   scrollbar-width: auto;

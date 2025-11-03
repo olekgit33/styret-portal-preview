@@ -239,13 +239,13 @@ function WizardView({
         <div className="flex items-center justify-between gap-2">
           <button
             onClick={onBack}
-            className="group px-2.5 py-1 bg-white/70 hover:bg-white backdrop-blur-sm border border-slate-300/50 rounded-lg text-xs font-semibold cursor-pointer hover:border-slate-400/60 transition-all duration-200 shadow-[0_1px_2px_rgba(0,0,0,0.05)] hover:shadow-[0_2px_4px_rgba(0,0,0,0.1)] hover:scale-[1.02] text-slate-700 hover:text-slate-900 flex-shrink-0"
+            className="group px-3 py-1.5 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-600 hover:from-blue-600 hover:via-indigo-600 hover:to-purple-700 backdrop-blur-sm border-2 border-blue-300/50 rounded-xl text-xs font-bold cursor-pointer transition-all duration-300 shadow-[0_4px_12px_rgba(59,130,246,0.4),0_0_0_1px_rgba(255,255,255,0.1)_inset] hover:shadow-[0_6px_20px_rgba(59,130,246,0.6),0_0_0_2px_rgba(255,255,255,0.2)_inset] hover:scale-[1.05] text-white flex-shrink-0 animate-[slideInLeft_0.6s_ease-out,pulse_2s_ease-in-out_0.6s_infinite] ring-2 ring-blue-200/50 hover:ring-blue-300/70"
           >
-            <span className="inline-flex items-center gap-1">
-              <svg className="w-3 h-3 group-hover:-translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
+            <span className="inline-flex items-center gap-1.5">
+              <svg className="w-3.5 h-3.5 group-hover:-translate-x-1 transition-transform duration-300 animate-[bounceLeft_1.5s_ease-in-out_infinite] drop-shadow-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M15 19l-7-7 7-7" />
               </svg>
-              Back
+              <span className="drop-shadow-sm">Back</span>
             </span>
           </button>
           <div className="flex-1 min-w-0 flex items-center gap-1.5 px-2 py-1 bg-slate-100/60 backdrop-blur-sm rounded-lg border border-slate-200/40">
