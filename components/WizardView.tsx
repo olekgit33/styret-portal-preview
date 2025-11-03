@@ -248,8 +248,8 @@ function WizardView({
               <span className="drop-shadow-sm">Back</span>
             </span>
           </button>
-          <div className="flex-1 min-w-0 flex items-center gap-1.5 px-2 py-1 bg-slate-100/60 backdrop-blur-sm rounded-lg border border-slate-200/40">
-            <span className="text-xs text-slate-600 truncate" title={address.givenAddress}>
+          <div className="flex-1 min-w-0 flex items-center gap-1.5 px-2 py-1 bg-gradient-to-r from-amber-50/90 via-orange-50/80 to-yellow-50/70 backdrop-blur-sm rounded-lg border-2 border-amber-200/60 shadow-[0_2px_6px_rgba(245,158,11,0.15)] ring-1 ring-amber-100/50">
+            <span className="text-xs text-amber-900 font-semibold truncate" title={address.givenAddress}>
               {address.givenAddress}
             </span>
           </div>
