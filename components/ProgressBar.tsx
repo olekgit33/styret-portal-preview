@@ -40,9 +40,6 @@ function ProgressBar({ completedCount, totalCount, label = '' }: ProgressBarProp
               <div className="text-lg font-bold text-slate-900 leading-none">
                 {completedCount}<span className="text-sm font-semibold text-slate-500">/{totalCount}</span>
               </div>
-              <div className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide mt-0.5">
-                Addresses
-              </div>
             </div>
           </div>
         </div>

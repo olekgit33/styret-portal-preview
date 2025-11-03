@@ -36,23 +36,24 @@ export async function geocodeAddress(address: string): Promise<{ lat: number; ln
 }
 
 /**
- * Get approximate coordinates for common US cities (fallback)
+ * Get approximate coordinates for common Norwegian addresses (fallback)
  */
 export function getFallbackCoordinates(address: string): { lat: number; lng: number } | null {
-  const cityMap: Record<string, { lat: number; lng: number }> = {
-    'New York': { lat: 40.7128, lng: -74.006 },
-    'Los Angeles': { lat: 34.0522, lng: -118.2437 },
-    'Chicago': { lat: 41.8781, lng: -87.6298 },
-    'Houston': { lat: 29.7604, lng: -95.3698 },
+  const addressMap: Record<string, { lat: number; lng: number }> = {
+    'Karl Johans gate': { lat: 59.9139, lng: 10.7522 },
+    'Storgata': { lat: 59.9153, lng: 10.7525 },
+    'Aker Brygge': { lat: 59.9097, lng: 10.7238 },
+    'Frognerveien': { lat: 59.9244, lng: 10.6996 },
+    'Oslo': { lat: 59.9139, lng: 10.7522 },
   }
 
-  for (const [city, coords] of Object.entries(cityMap)) {
-    if (address.includes(city)) {
+  for (const [key, coords] of Object.entries(addressMap)) {
+    if (address.includes(key)) {
       return coords
     }
   }
 
-  // Default to New York
-  return { lat: 40.7128, lng: -74.006 }
+  // Default to Oslo, Norway
+  return { lat: 59.9139, lng: 10.7522 }
 }
 

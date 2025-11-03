@@ -221,69 +221,26 @@ function RightSection({
   }, [currentPathPoints])
 
   return (
-    <div className="w-[70%] h-full flex bg-white rounded-lg shadow-lg overflow-hidden gap-2 p-2 min-w-0">
-      {/* Left Map - Outline */}
+    <div className="w-[70%] h-full flex bg-white rounded-lg shadow-lg overflow-hidden min-w-0">
+      {/* Single Mapbox Map */}
       <div
-        className="w-1/3 h-full relative rounded-md overflow-hidden border border-gray-200"
+        className="w-full h-full relative rounded-md overflow-hidden border border-gray-200"
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
         onMouseMove={handleMouseMove}
       >
-                <MapContainer
-                  mapType="outline"
-                  selectedAddress={selectedAddress}
-                  onMapClick={handleMapClick}
-                  pendingDoorPosition={pendingDoorPosition ? { lat: pendingDoorPosition.lat, lng: pendingDoorPosition.lng } : undefined}
-                  addressCoordinates={addressCoordinates}
-                  currentPathPoints={currentPathPoints}
-                  activeScenario={activeScenario}
-                  isEditingDoor={isEditingDoor}
-                  onDoorDragEnd={handleDoorDragEnd}
-                  onScreenPositionUpdate={handleScreenPositionUpdate}
-                />
-      </div>
-
-      {/* Right Section - Satellite and Street */}
-      <div className="w-2/3 h-full flex flex-col gap-2">
-        {/* Top Map - Satellite */}
-        <div
-          className="h-1/2 relative rounded-md overflow-hidden border border-gray-200"
-          onMouseEnter={handleMouseEnter}
-          onMouseLeave={handleMouseLeave}
-          onMouseMove={handleMouseMove}
-        >
-          <MapContainer
-            mapType="satellite"
-            selectedAddress={selectedAddress}
-            onMapClick={handleMapClick}
-            pendingDoorPosition={pendingDoorPosition ? { lat: pendingDoorPosition.lat, lng: pendingDoorPosition.lng } : undefined}
-            addressCoordinates={addressCoordinates}
-            currentPathPoints={currentPathPoints}
-            activeScenario={activeScenario}
-            isEditingDoor={isEditingDoor}
-            onDoorDragEnd={handleDoorDragEnd}
-          />
-        </div>
-
-        {/* Bottom Map - Street */}
-        <div
-          className="h-1/2 relative rounded-md overflow-hidden border border-gray-200"
-          onMouseEnter={handleMouseEnter}
-          onMouseLeave={handleMouseLeave}
-          onMouseMove={handleMouseMove}
-        >
-          <MapContainer
-            mapType="street"
-            selectedAddress={selectedAddress}
-            onMapClick={handleMapClick}
-            pendingDoorPosition={pendingDoorPosition ? { lat: pendingDoorPosition.lat, lng: pendingDoorPosition.lng } : undefined}
-            addressCoordinates={addressCoordinates}
-            currentPathPoints={currentPathPoints}
-            activeScenario={activeScenario}
-            isEditingDoor={isEditingDoor}
-            onDoorDragEnd={handleDoorDragEnd}
-          />
-        </div>
+        <MapContainer
+          mapType="outline"
+          selectedAddress={selectedAddress}
+          onMapClick={handleMapClick}
+          pendingDoorPosition={pendingDoorPosition ? { lat: pendingDoorPosition.lat, lng: pendingDoorPosition.lng } : undefined}
+          addressCoordinates={addressCoordinates}
+          currentPathPoints={currentPathPoints}
+          activeScenario={activeScenario}
+          isEditingDoor={isEditingDoor}
+          onDoorDragEnd={handleDoorDragEnd}
+          onScreenPositionUpdate={handleScreenPositionUpdate}
+        />
       </div>
 
       {/* Door Icon Cursor - only shows when mouse is over maps */}

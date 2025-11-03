@@ -34,7 +34,10 @@ function WizardView({
 }: WizardViewProps) {
   const [searchQuery, setSearchQuery] = useState('')
   const [isSelectFocused, setIsSelectFocused] = useState(false)
+  const step1Ref = useRef<HTMLDivElement>(null)
+  const step2Ref = useRef<HTMLDivElement>(null)
   const step3Ref = useRef<HTMLDivElement>(null)
+  const step4Ref = useRef<HTMLDivElement>(null)
   const prevDoorPosition = useRef<{ lat: number; lng: number } | undefined>(address.doorPosition)
   
   // Track completion states to detect when steps become completed
@@ -44,6 +47,37 @@ function WizardView({
   const prevDoorState = useRef<boolean>(!!address.doorPosition)
   const prevScenariosState = useRef<boolean>(address.scenarioPaths ? SCENARIOS.every(s => address.scenarioPaths?.[s]) : false)
   const prevParkingState = useRef<boolean>(!!address.parkingSpotSet)
+  
+  // Helper function to get next step to scroll to
+  const getNextStep = useCallback((justCompleted: Set<number>): number | null => {
+    // Find the highest completed step number
+    const maxCompleted = Math.max(...Array.from(justCompleted))
+    
+    // Skip step 2 (it's display-only), go directly to step 3 after step 1
+    if (maxCompleted === 1) {
+      return 3 // Skip step 2, go to step 3
+    }
+    
+    // Return next step if exists
+    if (maxCompleted < 4) {
+      return maxCompleted + 1
+    }
+    return null
+  }, [])
+  
+  // Function to scroll to a specific step
+  const scrollToStep = useCallback((stepNumber: number) => {
+    const stepRefs = [step1Ref, step2Ref, step3Ref, step4Ref]
+    const ref = stepRefs[stepNumber - 1]
+    
+    if (ref?.current) {
+      ref.current.scrollIntoView({ 
+        behavior: 'smooth', 
+        block: 'center',
+        inline: 'nearest'
+      })
+    }
+  }, [])
   
   // Track step completions and trigger animations
   useEffect(() => {
@@ -92,8 +126,30 @@ function WizardView({
       setTimeout(() => {
         setJustCompleted(new Set())
       }, 2000) // Animation duration
+      
+      // Auto-scroll logic
+      setTimeout(() => {
+        const maxCompleted = Math.max(...Array.from(newJustCompleted))
+        
+        // If step 1 just completed, first scroll to step 2 to show active icon
+        // then continue to step 3
+        if (maxCompleted === 1) {
+          // Scroll to step 2 first to show the play icon
+          scrollToStep(2)
+          // Then after a brief pause, scroll to step 3
+          setTimeout(() => {
+            scrollToStep(3)
+          }, 1000)
+        } else {
+          // For other steps, use normal next step logic
+          const nextStep = getNextStep(newJustCompleted)
+          if (nextStep) {
+            scrollToStep(nextStep)
+          }
+        }
+      }, 800) // Delay before scrolling to next step
     }
-  }, [address])
+  }, [address, getNextStep, scrollToStep])
   
   // Auto-scroll to step 3 when door is placed
   useEffect(() => {
@@ -191,8 +247,8 @@ function WizardView({
     if (!isStep1Completed || isSelectFocused) {
       return 1
     }
-    // Step 2 is active if door is not placed
-    if (!address.doorPosition) {
+    // Step 2 is active if step 1 is completed but door is not placed yet
+    if (isStep1Completed && !address.doorPosition) {
       return 2
     }
     // Step 3 is active if door is placed and scenarios are being worked on or not all scenarios have paths
@@ -239,13 +295,13 @@ function WizardView({
         <div className="flex items-center justify-between gap-2">
           <button
             onClick={onBack}
-            className="group px-3 py-1.5 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-600 hover:from-blue-600 hover:via-indigo-600 hover:to-purple-700 backdrop-blur-sm border-2 border-blue-300/50 rounded-xl text-xs font-bold cursor-pointer transition-all duration-300 shadow-[0_4px_12px_rgba(59,130,246,0.4),0_0_0_1px_rgba(255,255,255,0.1)_inset] hover:shadow-[0_6px_20px_rgba(59,130,246,0.6),0_0_0_2px_rgba(255,255,255,0.2)_inset] hover:scale-[1.05] text-white flex-shrink-0 animate-[slideInLeft_0.6s_ease-out,pulse_2s_ease-in-out_0.6s_infinite] ring-2 ring-blue-200/50 hover:ring-blue-300/70"
+            className="px-3 py-1.5 bg-white border border-slate-300 rounded-lg text-xs font-medium cursor-pointer hover:bg-slate-50 transition-colors text-slate-700"
           >
             <span className="inline-flex items-center gap-1.5">
-              <svg className="w-3.5 h-3.5 group-hover:-translate-x-1 transition-transform duration-300 animate-[bounceLeft_1.5s_ease-in-out_infinite] drop-shadow-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M15 19l-7-7 7-7" />
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
               </svg>
-              <span className="drop-shadow-sm">Back</span>
+              <span>Back</span>
             </span>
           </button>
           <div className="flex-1 min-w-0 flex items-center gap-1.5 px-2 py-1 bg-gradient-to-r from-amber-50/90 via-orange-50/80 to-yellow-50/70 backdrop-blur-sm rounded-lg border-2 border-amber-200/60 shadow-[0_2px_6px_rgba(245,158,11,0.15)] ring-1 ring-amber-100/50">
@@ -281,15 +337,15 @@ function WizardView({
         )}
       </div>
 
-      {/* Overall Address Progress Bar */}
+      {/* Category Progress Bar */}
       <div className="flex-shrink-0">
-        <ProgressBar completedCount={completedCount} totalCount={totalAddresses}/>
+        <ProgressBar completedCount={categoryProgress.completed} totalCount={categoryProgress.total} label="Categories"/>
       </div>
 
       {/* Wizard Steps - Scrollable Section */}
       <div className="flex-1 overflow-y-scroll overflow-x-hidden p-2 flex flex-col gap-2 min-h-0" style={{ scrollbarWidth: 'thin', scrollbarColor: '#c1c1c1 #f1f1f1' }}>
         {/* Validation Step */}
-        <div className={`p-3 bg-white/90 backdrop-blur-md rounded-2xl border transition-all duration-500 flex flex-col relative hover:shadow-[0_4px_12px_rgba(0,0,0,0.08)] ${
+        <div ref={step1Ref} className={`p-3 bg-white/90 backdrop-blur-md rounded-2xl border transition-all duration-500 flex flex-col relative hover:shadow-[0_4px_12px_rgba(0,0,0,0.08)] ${
           !validationEnabled ? 'opacity-60' : 'hover:scale-[1.01]'
         } ${
           justCompleted.has(1) 
@@ -338,20 +394,16 @@ function WizardView({
 
         {/* Place Door Step */}
         <div 
-          className={`p-3 bg-white/90 backdrop-blur-md rounded-2xl border transition-all duration-500 flex flex-col relative hover:shadow-[0_4px_12px_rgba(0,0,0,0.08)] ${
-            !doorEnabled ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer hover:scale-[1.01]'
+          ref={step2Ref}
+          className={`p-3 bg-white/90 backdrop-blur-md rounded-2xl border transition-all duration-500 flex flex-col relative ${
+            !doorEnabled ? 'opacity-60' : ''
           } ${
             justCompleted.has(2) 
               ? 'border-emerald-400/80 shadow-[0_0_0_4px_rgba(16,185,129,0.2),0_4px_20px_rgba(16,185,129,0.3)] bg-gradient-to-br from-emerald-50/50 to-white/90 scale-[1.02]' 
               : isStepCompleted(2)
               ? 'border-emerald-200/60 shadow-[0_2px_8px_rgba(0,0,0,0.04)]'
               : 'border-slate-200/60 shadow-[0_2px_8px_rgba(0,0,0,0.04)]'
-          } hover:border-slate-300/60`}
-          onClick={() => {
-            if (doorEnabled && onEditDoorChange) {
-              onEditDoorChange(!isEditingDoor)
-            }
-          }}
+          }`}
         >
           {isStepCompleted(2) && (
             <div className={`absolute top-2 right-2 w-6 h-6 bg-gradient-to-br from-emerald-500 via-green-500 to-teal-600 rounded-full flex items-center justify-center shadow-[0_2px_6px_rgba(16,185,129,0.4)] ring-2 ring-emerald-100/50 transition-all duration-500 ${
@@ -479,7 +531,7 @@ function WizardView({
         </div>
 
         {/* Parking Spot Step */}
-        <div className={`p-3 bg-white/90 backdrop-blur-md rounded-2xl border transition-all duration-500 flex flex-col relative hover:shadow-[0_4px_12px_rgba(0,0,0,0.08)] ${
+        <div ref={step4Ref} className={`p-3 bg-white/90 backdrop-blur-md rounded-2xl border transition-all duration-500 flex flex-col relative hover:shadow-[0_4px_12px_rgba(0,0,0,0.08)] ${
           !parkingEnabled ? 'opacity-60' : 'hover:scale-[1.01]'
         } ${
           justCompleted.has(4) 
@@ -545,7 +597,7 @@ function WizardView({
                 </svg>
               </div>
               <div className="text-left">
-                <div className="text-[10px] text-slate-500 font-semibold uppercase tracking-wide">Progress</div>
+                <div className="text-[10px] text-slate-500 font-semibold uppercase tracking-wide"></div>
                 <div className="text-xs font-bold text-slate-900">
                   {completedCount}/{totalAddresses}
                 </div>
@@ -556,7 +608,7 @@ function WizardView({
           {/* Next Button */}
           <button
             onClick={() => onNavigate('next')}
-            className="group flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white rounded-xl cursor-pointer text-xs font-bold hover:from-blue-700 hover:via-indigo-700 hover:to-purple-700 shadow-[0_4px_12px_rgba(59,130,246,0.4)] hover:shadow-[0_6px_16px_rgba(59,130,246,0.5)] transform hover:scale-105 transition-all duration-300 flex-shrink-0"
+            className="group flex items-center gap-1.5 px-4 py-2 bg-blue-600 text-white rounded-xl cursor-pointer text-xs font-bold hover:bg-blue-700 transition-colors flex-shrink-0"
           >
             <span className="text-white">Next</span>
             <svg className="w-3.5 h-3.5 text-white group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">

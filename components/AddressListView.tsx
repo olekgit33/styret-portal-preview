@@ -167,22 +167,6 @@ function AddressListView({
                   return (
                     <div className="mt-3 pt-3 border-t border-slate-200/50">
                       <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center gap-2">
-                          <div className={`w-1.5 h-1.5 rounded-full ${
-                            isCompleted ? 'bg-emerald-500' : 'bg-orange-500'
-                          }`} />
-                          <div className="text-[10px] font-bold text-slate-700 uppercase tracking-wide">Wizard Progress</div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <div className={`text-xs font-bold ${
-                            isCompleted ? 'text-emerald-600' : 'text-orange-600'
-                          }`}>
-                            {isCompleted ? '100%' : `${Math.round((stepsCompleted / 4) * 100)}%`}
-                          </div>
-                          <div className="text-[10px] font-semibold text-slate-500">
-                            {stepsCompleted}/4
-                          </div>
-                        </div>
                       </div>
                       
                       {/* Modern Progress Bar */}
@@ -193,19 +177,11 @@ function AddressListView({
                           <div
                             className={`h-full rounded-full transition-all duration-700 ease-out relative overflow-hidden ${
                               isCompleted
-                                ? 'bg-gradient-to-r from-emerald-500 via-green-500 to-teal-600 shadow-[0_2px_6px_rgba(16,185,129,0.4)]'
-                                : 'bg-gradient-to-r from-orange-500 via-amber-500 to-yellow-500 shadow-[0_2px_6px_rgba(251,146,60,0.4)]'
+                                ? 'bg-green-500'
+                                : 'bg-blue-500'
                             }`}
                             style={{ width: `${isCompleted ? 100 : (stepsCompleted / 4) * 100}%` }}
-                          >
-                            {/* Shimmer Effect */}
-                            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-[shimmer_2s_infinite]" />
-                            
-                            {/* Glow Effect at end */}
-                            <div className={`absolute right-0 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full blur-md opacity-50 ${
-                              isCompleted ? 'bg-emerald-400' : 'bg-orange-400'
-                            }`} />
-                          </div>
+                          />
                         </div>
                         
                         {/* Step Markers */}
@@ -216,8 +192,8 @@ function AddressListView({
                               className={`w-0.5 h-1.5 rounded-full transition-all duration-300 ${
                                 step <= stepsCompleted
                                   ? isCompleted
-                                    ? 'bg-emerald-400 shadow-[0_0_3px_rgba(16,185,129,0.6)]'
-                                    : 'bg-orange-400 shadow-[0_0_3px_rgba(251,146,60,0.6)]'
+                                    ? 'bg-green-500'
+                                    : 'bg-blue-500'
                                   : 'bg-slate-300/40'
                               }`}
                             />
@@ -230,14 +206,14 @@ function AddressListView({
                         <div className="flex items-center gap-1.5">
                           {isCompleted ? (
                             <>
-                              <svg className="w-3 h-3 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <svg className="w-3 h-3 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
                               </svg>
-                              <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-wide">All Steps Completed</span>
+                              <span className="text-[10px] font-bold text-green-600 uppercase tracking-wide">All Steps Completed</span>
                             </>
                           ) : (
                             <>
-                              <div className="w-1.5 h-1.5 rounded-full bg-orange-500 animate-pulse" />
+                              <div className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
                               <span className="text-[10px] font-semibold text-slate-500">
                                 {4 - stepsCompleted} step{4 - stepsCompleted !== 1 ? 's' : ''} remaining
                               </span>

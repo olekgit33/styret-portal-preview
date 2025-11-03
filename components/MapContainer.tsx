@@ -44,15 +44,15 @@ function MapClickHandler({
 }
 
 // Component to update map center when address coordinates change
-function MapCenterUpdater({ center }: { center: [number, number] }) {
+function MapCenterUpdater({ center, zoom }: { center: [number, number], zoom?: number }) {
   const map = useMap()
   
   useEffect(() => {
-    map.setView(center, map.getZoom(), {
+    map.setView(center, zoom || map.getZoom(), {
       animate: true,
       duration: 0.5,
     })
-  }, [center, map])
+  }, [center, zoom, map])
   
   return null
 }
@@ -176,39 +176,18 @@ function DraggableDoorMarker({
 function getTileLayerUrl(mapType: 'outline' | 'satellite' | 'street'): string {
   const mapboxToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN || ''
   
-  switch (mapType) {
-    case 'satellite':
-      // Using Google Maps satellite imagery
-      return 'https://mt{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}'
-    case 'street':
-      return 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
-    case 'outline':
-      // Using Mapbox Light style for outline/minimal map from mapbox.com
-      // Mapbox requires an access token - get one from https://account.mapbox.com/access-tokens/
-      if (mapboxToken) {
-        return `https://api.mapbox.com/styles/v1/mapbox/light-v11/tiles/{z}/{x}/{y}?access_token=${mapboxToken}`
-      }
-      // Fallback to OpenStreetMap if no token provided
-      return 'https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png'
-    default:
-      return 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
+  // Always use Mapbox - use streets style as default
+  if (mapboxToken) {
+    return `https://api.mapbox.com/styles/v1/mapbox/streets-v12/tiles/{z}/{x}/{y}?access_token=${mapboxToken}`
   }
+  
+  // If no token, return empty string (map won't load - this is expected)
+  return ''
 }
 
 function getTileLayerAttribution(mapType: 'outline' | 'satellite' | 'street'): string {
-  switch (mapType) {
-    case 'outline':
-      const mapboxToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN
-      if (mapboxToken) {
-        return '&copy; <a href="https://www.mapbox.com/about/maps/">Mapbox</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-      }
-      return '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-    case 'satellite':
-      return '&copy; <a href="https://www.google.com/maps">Google</a>'
-    case 'street':
-    default:
-      return '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-  }
+  // Always use Mapbox attribution
+  return '&copy; <a href="https://www.mapbox.com/about/maps/">Mapbox</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
 }
 
 export default function MapContainer({
@@ -223,8 +202,8 @@ export default function MapContainer({
   onDoorDragEnd,
   onScreenPositionUpdate,
 }: MapContainerProps) {
-  const defaultCenter: [number, number] = [40.7128, -74.006] // Default to New York
-  const defaultZoom = 13
+  const defaultCenter: [number, number] = [59.9139, 10.7522] // Default to Oslo, Norway
+  const defaultZoom = 18
 
   // Priority: addressCoordinates > doorPosition > defaultCenter
   const center: [number, number] = addressCoordinates
@@ -283,14 +262,14 @@ export default function MapContainer({
         <TileLayer
           attribution={getTileLayerAttribution(mapType)}
           url={getTileLayerUrl(mapType)}
-          tileSize={mapType === 'satellite' ? 256 : (mapType === 'outline' && process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN ? 512 : 256)}
-          zoomOffset={mapType === 'outline' && process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN ? -1 : 0}
-          subdomains={mapType === 'satellite' ? ['0', '1', '2', '3'] : (mapType === 'outline' && process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN ? [] : ['a', 'b', 'c'])}
-          maxZoom={mapType === 'satellite' ? 20 : 19}
+          tileSize={process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN ? 512 : 256}
+          zoomOffset={process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN ? -1 : 0}
+          subdomains={[]}
+          maxZoom={19}
         />
-        <MapCenterUpdater center={center} />
+        <MapCenterUpdater center={center} zoom={defaultZoom} />
         <MapClickHandler onMapClick={onMapClick} mapType={mapType} />
-        {mapType === 'outline' && pendingDoorPosition && (
+        {pendingDoorPosition && (
           <ScreenPositionUpdater
             pendingDoorPosition={pendingDoorPosition}
             onScreenPositionUpdate={onScreenPositionUpdate || undefined}
@@ -304,7 +283,7 @@ export default function MapContainer({
             icon={pendingDoorIcon}
             onDragEnd={onDoorDragEnd}
             isEditing={true}
-            onScreenPositionUpdate={mapType === 'outline' ? onScreenPositionUpdate || undefined : undefined}
+            onScreenPositionUpdate={onScreenPositionUpdate || undefined}
           />
         )}
         
