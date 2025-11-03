@@ -174,61 +174,51 @@ function WizardView({
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden min-h-0">
-      {/* Back Button */}
+      {/* Back Button with Original Address */}
       <div className="flex-shrink-0 px-2.5 py-1.5 bg-gradient-to-r from-white via-slate-50/80 to-white backdrop-blur-md border-b border-slate-200/40 shadow-[0_1px_0_0_rgba(255,255,255,0.8)]">
-        <button
-          onClick={onBack}
-          className="group px-2.5 py-1 bg-white/70 hover:bg-white backdrop-blur-sm border border-slate-300/50 rounded-lg text-xs font-semibold cursor-pointer hover:border-slate-400/60 transition-all duration-200 shadow-[0_1px_2px_rgba(0,0,0,0.05)] hover:shadow-[0_2px_4px_rgba(0,0,0,0.1)] hover:scale-[1.02] text-slate-700 hover:text-slate-900"
-        >
-          <span className="inline-flex items-center gap-1">
-            <svg className="w-3 h-3 group-hover:-translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
-            </svg>
-            Back
-          </span>
-        </button>
-      </div>
-
-      {/* Current Address Section */}
-      <div className="flex-shrink-0 px-2.5 py-1.5 bg-gradient-to-r from-slate-50 via-blue-50/50 to-indigo-50/50 backdrop-blur-md border-b border-slate-200/40 shadow-[0_1px_0_0_rgba(255,255,255,0.8)]">
-        <div className="flex items-center gap-2">
-          <div className="flex-shrink-0 w-5 h-5 bg-gradient-to-br from-blue-500 via-indigo-500 to-purple-600 rounded-lg flex items-center justify-center shadow-[0_2px_8px_rgba(59,130,246,0.4)] ring-1 ring-blue-200/50">
-            <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-            </svg>
-          </div>
-          <div className="flex-1 min-w-0 flex items-center gap-2 overflow-hidden">
-            {address.validatedAddress ? (
-              <>
-                <div className="flex-1 min-w-0 flex items-center gap-1.5 px-2 py-1 bg-slate-100/60 backdrop-blur-sm rounded-lg border border-slate-200/40">
-                  <span className="text-[10px] font-medium text-slate-500 uppercase tracking-wider flex-shrink-0">Original:</span>
-                  <span className="text-xs text-slate-600 truncate" title={address.givenAddress}>
-                    {address.givenAddress}
-                  </span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <svg className="w-3 h-3 text-emerald-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </div>
-                <div className="flex-1 min-w-0 flex items-center gap-1.5 px-2 py-1 bg-gradient-to-r from-emerald-50/80 to-teal-50/60 backdrop-blur-sm rounded-lg border border-emerald-200/50 shadow-[0_1px_2px_rgba(16,185,129,0.2)] ring-1 ring-emerald-100/50">
-                  <span className="text-[10px] font-semibold text-emerald-700 uppercase tracking-wider flex-shrink-0">Validated:</span>
-                  <span className="text-xs font-semibold text-emerald-900 truncate" title={address.validatedAddress}>
-                    {address.validatedAddress}
-                  </span>
-                </div>
-              </>
-            ) : (
-              <div className="flex-1 min-w-0 flex items-center gap-1.5 px-2 py-1 bg-slate-100/60 backdrop-blur-sm rounded-lg border border-slate-200/40">
-                <span className="text-[10px] font-medium text-slate-500 uppercase tracking-wider flex-shrink-0">Original:</span>
-                <span className="text-xs text-slate-600 truncate" title={address.givenAddress}>
-                  {address.givenAddress}
-                </span>
-              </div>
-            )}
+        <div className="flex items-center justify-between gap-2">
+          <button
+            onClick={onBack}
+            className="group px-2.5 py-1 bg-white/70 hover:bg-white backdrop-blur-sm border border-slate-300/50 rounded-lg text-xs font-semibold cursor-pointer hover:border-slate-400/60 transition-all duration-200 shadow-[0_1px_2px_rgba(0,0,0,0.05)] hover:shadow-[0_2px_4px_rgba(0,0,0,0.1)] hover:scale-[1.02] text-slate-700 hover:text-slate-900 flex-shrink-0"
+          >
+            <span className="inline-flex items-center gap-1">
+              <svg className="w-3 h-3 group-hover:-translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
+              </svg>
+              Back
+            </span>
+          </button>
+          <div className="flex-1 min-w-0 flex items-center gap-1.5 px-2 py-1 bg-slate-100/60 backdrop-blur-sm rounded-lg border border-slate-200/40">
+            <span className="text-xs text-slate-600 truncate" title={address.givenAddress}>
+              {address.givenAddress}
+            </span>
           </div>
         </div>
+      </div>
+
+      {/* Validated Address Section - Fixed Height */}
+      <div className="flex-shrink-0 min-h-[60px] px-2.5 py-2 bg-gradient-to-r from-slate-50 via-blue-50/50 to-indigo-50/50 backdrop-blur-md border-b border-slate-200/40 shadow-[0_1px_0_0_rgba(255,255,255,0.8)] flex items-center">
+        {address.validatedAddress ? (
+          <div className="flex-1 min-w-0 flex items-center gap-3">
+            <div className="flex-shrink-0 w-6 h-6 bg-gradient-to-br from-emerald-500 via-green-500 to-teal-600 rounded-lg flex items-center justify-center shadow-[0_2px_8px_rgba(16,185,129,0.4)] ring-2 ring-emerald-100/50">
+              <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <div className="flex-1 min-w-0 flex flex-col gap-1">
+              <span className="text-[10px] font-bold text-emerald-700 uppercase tracking-wider">Validated Address</span>
+              <div className="px-3 py-2 bg-gradient-to-r from-emerald-50/90 via-green-50/80 to-teal-50/70 backdrop-blur-sm rounded-xl border-2 border-emerald-300/60 shadow-[0_2px_8px_rgba(16,185,129,0.25)] ring-1 ring-emerald-100/50">
+                <span className="text-sm font-bold text-emerald-900 truncate block" title={address.validatedAddress}>
+                  {address.validatedAddress}
+                </span>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="flex-1 min-w-0 flex items-center justify-center">
+            <span className="text-xs text-slate-400 font-medium italic">No validated address yet</span>
+          </div>
+        )}
       </div>
 
       {/* Overall Address Progress Bar */}
