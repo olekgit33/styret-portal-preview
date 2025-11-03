@@ -125,7 +125,7 @@ function WizardView({
     // Step 3 is active if door is placed and scenarios are being worked on or not all scenarios have paths
     if (address.doorPosition) {
       const scenarioPaths = address.scenarioPaths || {}
-      const hasAllPaths = SCENARIOS.every(s => scenarioPaths[s])
+      const hasAllPaths = SCENARIOS.every(s => scenarioPaths[s] && scenarioPaths[s].length > 0)
       // Active if currently drawing a path OR not all scenarios have paths yet
       if (activeScenario || !hasAllPaths) {
         return 3
@@ -134,7 +134,7 @@ function WizardView({
     // Step 4 is active if all scenarios have paths but parking spot is not set
     if (address.scenarioPaths) {
       const scenarioPaths = address.scenarioPaths
-      const hasAllPaths = SCENARIOS.every(s => scenarioPaths[s])
+      const hasAllPaths = SCENARIOS.every(s => scenarioPaths[s] && scenarioPaths[s].length > 0)
       if (hasAllPaths && !address.parkingSpotSet) {
         return 4
       }
@@ -151,7 +151,7 @@ function WizardView({
         return !!address.doorPosition
       case 3: // Scenarios - all scenarios have paths
         if (!address.scenarioPaths) return false
-        return SCENARIOS.every(s => address.scenarioPaths?.[s])
+        return SCENARIOS.every(s => address.scenarioPaths?.[s] && address.scenarioPaths?.[s].length > 0)
       case 4: // Parking Spot
         return !!address.parkingSpotSet
       default:
@@ -267,7 +267,7 @@ function WizardView({
             </div>
           )}
           <div className="flex items-center text-lg font-semibold mb-2">
-            {getActiveStep() === 3 && (
+            {getActiveStep() === 3 && !activeScenario && !isEditingDoor && (
               <span className="mr-2 text-primary-500">▶</span>
             )}
             <span>Step 3. Draw Path</span>
@@ -275,7 +275,7 @@ function WizardView({
           <label className="block text-sm mb-1 text-gray-600">There are 4 scenarios, each reprents a path.</label>
           <div className="flex flex-col gap-2 flex-1">
             {SCENARIOS.map((scenario) => {
-              const hasPath = address.scenarioPaths?.[scenario]
+              const hasPath = address.scenarioPaths?.[scenario] && address.scenarioPaths?.[scenario].length > 0
               const stepEnabled = isCategoryEnabled('Scenarios')
               const isActive = activeScenario === scenario
 
@@ -297,7 +297,7 @@ function WizardView({
                     }
                   }}
                 >
-                  {isActive && stepEnabled && !hasPath && (
+                  {isActive && stepEnabled && !hasPath && !isEditingDoor && (
                     <span className="mr-2 text-primary-500">▶</span>
                   )}
                   {hasPath && <span className="mr-2 text-green-600">✓</span>}

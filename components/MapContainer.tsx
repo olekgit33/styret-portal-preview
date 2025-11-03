@@ -1,9 +1,9 @@
 'use client'
 
 import React, { useEffect } from 'react'
-import { MapContainer as LeafletMap, TileLayer, Marker, useMapEvents, useMap } from 'react-leaflet'
+import { MapContainer as LeafletMap, TileLayer, Marker, Polyline, useMapEvents, useMap } from 'react-leaflet'
 import L from 'leaflet'
-import { Address } from '@/types'
+import { Address, ScenarioType } from '@/types'
 
 interface MapContainerProps {
   mapType: 'outline' | 'satellite' | 'street'
@@ -11,6 +11,8 @@ interface MapContainerProps {
   onMapClick: (lat: number, lng: number, mapType: 'outline' | 'satellite' | 'street') => void
   pendingDoorPosition?: { lat: number; lng: number }
   addressCoordinates?: { lat: number; lng: number } | null
+  currentPathPoints?: { lat: number; lng: number }[]
+  activeScenario?: ScenarioType | null
 }
 
 // Fix for default marker icon issue
@@ -96,6 +98,8 @@ export default function MapContainer({
   onMapClick,
   pendingDoorPosition,
   addressCoordinates,
+  currentPathPoints,
+  activeScenario,
 }: MapContainerProps) {
   const defaultCenter: [number, number] = [40.7128, -74.006] // Default to New York
   const defaultZoom = 13
@@ -181,6 +185,69 @@ export default function MapContainer({
           />
         )}
         
+        {/* Scenario paths */}
+        {selectedAddress?.scenarioPaths && selectedAddress.doorPosition && !pendingDoorPosition && (
+          <>
+            {Object.entries(selectedAddress.scenarioPaths).map(([scenario, paths]) => {
+              if (!paths || paths.length === 0) return null
+
+              // Define colors for each scenario
+              const colors: Record<string, string> = {
+                'taxi': '#FFD700',      // Gold
+                'car/truck': '#FF6B35', // Orange
+                'bicycle': '#4CAF50',   // Green
+                'ambulance': '#FF1744'  // Red
+              }
+
+              return paths.map((path, pathIndex) => {
+                if (!path || path.points.length < 2) return null
+
+                // Convert points to [lat, lng] format for Polyline
+                const positions = path.points.map(p => [p.lat, p.lng] as [number, number])
+
+                return (
+                  <Polyline
+                    key={`${scenario}-${pathIndex}`}
+                    positions={positions}
+                    pathOptions={{
+                      color: colors[scenario] || '#3498db',
+                      weight: 4,
+                      opacity: 0.8,
+                    }}
+                  />
+                )
+              })
+            })}
+          </>
+        )}
+
+        {/* Current path being drawn */}
+        {currentPathPoints && currentPathPoints.length > 1 && activeScenario && (
+          <>
+            {(() => {
+              const colors: Record<string, string> = {
+                'taxi': '#FFD700',
+                'car/truck': '#FF6B35',
+                'bicycle': '#4CAF50',
+                'ambulance': '#FF1744'
+              }
+
+              const positions = currentPathPoints.map(p => [p.lat, p.lng] as [number, number])
+
+              return (
+                <Polyline
+                  positions={positions}
+                  pathOptions={{
+                    color: colors[activeScenario] || '#3498db',
+                    weight: 4,
+                    opacity: 0.8,
+                  }}
+                />
+              )
+            })()}
+          </>
+        )}
+
         {/* Parking spot */}
         {selectedAddress?.parkingSpotSet && selectedAddress.doorPosition && !pendingDoorPosition && (
           <Marker

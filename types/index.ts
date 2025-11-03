@@ -20,7 +20,7 @@ export interface Address {
   selectedScenarios: ScenarioType[]
   parkingSpotSet?: boolean
   pendingDoorPosition?: { lat: number; lng: number }
-  scenarioPaths?: Partial<Record<ScenarioType, ScenarioPath>> // Paths for each scenario
+  scenarioPaths?: Partial<Record<ScenarioType, ScenarioPath[]>> // Multiple paths for each scenario
 }
 
 export interface WizardStep {

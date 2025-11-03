@@ -32,12 +32,14 @@ function RightSection({
   const [mousePosition, setMousePosition] = useState<{ x: number; y: number } | null>(null)
   const [isMouseOverMap, setIsMouseOverMap] = useState(false)
   const [pendingDoorPosition, setPendingDoorPosition] = useState<{ lat: number; lng: number; x: number; y: number } | null>(null)
+  const [currentPathPoints, setCurrentPathPoints] = useState<{ lat: number; lng: number }[]>([])
+  const [pendingPathConfirmation, setPendingPathConfirmation] = useState<{ x: number; y: number } | null>(null)
 
   // Check if we should show door icon (only when Placing Door step is active or editing door)
   const shouldShowDoor =
     selectedAddress &&
     (selectedAddress.validatedAddress || selectedAddress.selectedAddress) &&
-    ((!selectedAddress.doorPosition || isEditingDoor) && !pendingDoorPosition) &&
+    ((!selectedAddress.doorPosition || isEditingDoor) && !pendingDoorPosition && !pendingPathConfirmation) &&
     isMouseOverMap
 
   const handleMouseEnter = useCallback(() => {
@@ -50,14 +52,13 @@ function RightSection({
   }, [])
 
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
-    // Only update mouse position if door placement is active and no pending position
+    // Update mouse position for door placement or path drawing
     if (selectedAddress &&
       (selectedAddress.validatedAddress || selectedAddress.selectedAddress) &&
-      (!selectedAddress.doorPosition || isEditingDoor) &&
-      !pendingDoorPosition) {
+      ((!selectedAddress.doorPosition || isEditingDoor || activeScenario) && !pendingDoorPosition && !pendingPathConfirmation)) {
       setMousePosition({ x: e.clientX, y: e.clientY })
     }
-  }, [selectedAddress, pendingDoorPosition, isEditingDoor])
+  }, [selectedAddress, pendingDoorPosition, pendingPathConfirmation, isEditingDoor, activeScenario])
 
   const handleMapClick = useCallback((lat: number, lng: number, mapType: 'outline' | 'satellite' | 'street') => {
     if (!selectedAddress || !selectedAddressId) return
@@ -65,9 +66,21 @@ function RightSection({
     // Handle door placement - show confirmation UI (either first time or when editing)
     if (
       (selectedAddress.validatedAddress || selectedAddress.selectedAddress) &&
-      ((!selectedAddress.doorPosition || isEditingDoor) && !pendingDoorPosition)
+      ((!selectedAddress.doorPosition || isEditingDoor) && !pendingDoorPosition && !activeScenario)
     ) {
       setPendingDoorPosition({ lat, lng, x: mousePosition?.x || window.innerWidth / 2, y: mousePosition?.y || window.innerHeight / 2 })
+      setMousePosition(null)
+      return
+    }
+
+    // Handle scenario path drawing (when activeScenario is set)
+    if (activeScenario && selectedAddress.doorPosition && !pendingPathConfirmation) {
+      // Add point immediately to show line (no confirmation UI per click)
+      const newPoints = currentPathPoints.length === 0 
+        ? [{ lat: selectedAddress.doorPosition.lat, lng: selectedAddress.doorPosition.lng }, { lat, lng }]
+        : [...currentPathPoints, { lat, lng }]
+      
+      setCurrentPathPoints(newPoints)
       setMousePosition(null)
       return
     }
@@ -76,13 +89,15 @@ function RightSection({
     if (
       selectedAddress.doorPosition &&
       !isEditingDoor &&
+      !activeScenario &&
+      !pendingPathConfirmation &&
       selectedAddress.selectedScenarios &&
       selectedAddress.selectedScenarios.length > 0 &&
       !selectedAddress.parkingSpotSet
     ) {
       onUpdateAddress(selectedAddressId, { parkingSpotSet: true })
     }
-  }, [selectedAddress, selectedAddressId, onUpdateAddress, pendingDoorPosition, mousePosition, isEditingDoor])
+  }, [selectedAddress, selectedAddressId, onUpdateAddress, pendingDoorPosition, pendingPathConfirmation, currentPathPoints, mousePosition, isEditingDoor, activeScenario])
 
   const handleConfirmDoor = useCallback(() => {
     if (!selectedAddressId || !pendingDoorPosition) return
@@ -101,6 +116,33 @@ function RightSection({
     setMousePosition(null)
   }, [])
 
+  const handleShowFinishConfirmation = useCallback(() => {
+    // Show confirmation UI when user clicks Finish Path button
+    setPendingPathConfirmation({ x: window.innerWidth / 2, y: window.innerHeight / 2 })
+  }, [])
+
+  const handleConfirmFinishPath = useCallback(() => {
+    if (!selectedAddressId || !activeScenario || currentPathPoints.length === 0) return
+    
+    // Add the current path to the scenario's paths
+    const existingPaths = selectedAddress?.scenarioPaths?.[activeScenario] || []
+    onUpdateAddress(selectedAddressId, {
+      scenarioPaths: {
+        ...selectedAddress?.scenarioPaths,
+        [activeScenario]: [...existingPaths, { points: currentPathPoints }]
+      }
+    })
+    
+    // Clear current path and hide confirmation UI
+    setCurrentPathPoints([])
+    setPendingPathConfirmation(null)
+  }, [selectedAddressId, activeScenario, currentPathPoints, selectedAddress, onUpdateAddress])
+
+  const handleCancelFinishPath = useCallback(() => {
+    // Just hide the confirmation UI, don't save the path
+    setPendingPathConfirmation(null)
+  }, [])
+
   return (
     <div className="w-[70%] h-full flex bg-white rounded-lg shadow-lg overflow-hidden gap-2 p-2 min-w-0">
       {/* Left Map - Outline */}
@@ -116,6 +158,8 @@ function RightSection({
                   onMapClick={handleMapClick}
                   pendingDoorPosition={pendingDoorPosition ? { lat: pendingDoorPosition.lat, lng: pendingDoorPosition.lng } : undefined}
                   addressCoordinates={addressCoordinates}
+                  currentPathPoints={currentPathPoints}
+                  activeScenario={activeScenario}
                 />
       </div>
 
@@ -134,6 +178,8 @@ function RightSection({
             onMapClick={handleMapClick}
             pendingDoorPosition={pendingDoorPosition ? { lat: pendingDoorPosition.lat, lng: pendingDoorPosition.lng } : undefined}
             addressCoordinates={addressCoordinates}
+            currentPathPoints={currentPathPoints}
+            activeScenario={activeScenario}
           />
         </div>
 
@@ -150,6 +196,8 @@ function RightSection({
             onMapClick={handleMapClick}
             pendingDoorPosition={pendingDoorPosition ? { lat: pendingDoorPosition.lat, lng: pendingDoorPosition.lng } : undefined}
             addressCoordinates={addressCoordinates}
+            currentPathPoints={currentPathPoints}
+            activeScenario={activeScenario}
           />
         </div>
       </div>
@@ -167,12 +215,46 @@ function RightSection({
         </div>
       )}
 
+      {/* Path Drawing Cursor - shows when a scenario is selected */}
+      {activeScenario && isMouseOverMap && selectedAddress?.doorPosition && mousePosition && !pendingPathConfirmation && (
+        <div
+          className="fixed w-6 h-6 pointer-events-none z-[9999] text-2xl"
+          style={{
+            left: mousePosition.x - 12,
+            top: mousePosition.y - 12,
+          }}
+        >
+          ✏️
+        </div>
+      )}
+
       {/* Door Confirmation UI */}
       {pendingDoorPosition && (
         <DoorConfirmation
           position={{ x: pendingDoorPosition.x, y: pendingDoorPosition.y }}
           onConfirm={handleConfirmDoor}
           onCancel={handleCancelDoor}
+        />
+      )}
+
+      {/* Finish Path Button */}
+      {currentPathPoints.length > 0 && activeScenario && !pendingPathConfirmation && (
+        <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-[10001]">
+          <button
+            onClick={handleShowFinishConfirmation}
+            className="px-6 py-3 bg-primary-500 text-white rounded-lg shadow-lg hover:bg-primary-600 transition-colors font-semibold"
+          >
+            ✓ Finish Path
+          </button>
+        </div>
+      )}
+
+      {/* Path Finish Confirmation UI */}
+      {pendingPathConfirmation && (
+        <DoorConfirmation
+          position={{ x: pendingPathConfirmation.x, y: pendingPathConfirmation.y }}
+          onConfirm={handleConfirmFinishPath}
+          onCancel={handleCancelFinishPath}
         />
       )}
     </div>
