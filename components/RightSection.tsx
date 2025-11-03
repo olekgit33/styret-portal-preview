@@ -184,18 +184,25 @@ function RightSection({
     if (!selectedAddressId || !activeScenario || currentPathPoints.length === 0) return
     
     // Save the current path to the scenario
+    const updatedScenarioPaths = {
+      ...selectedAddress?.scenarioPaths,
+      [activeScenario]: { points: currentPathPoints }
+    }
+    
     onUpdateAddress(selectedAddressId, {
-      scenarioPaths: {
-        ...selectedAddress?.scenarioPaths,
-        [activeScenario]: { points: currentPathPoints }
-      }
+      scenarioPaths: updatedScenarioPaths
     })
     
     // Clear current path and hide confirmation UI
     setCurrentPathPoints([])
     setPendingPathConfirmation(null)
     setLastPathClickPosition(null)
-  }, [selectedAddressId, activeScenario, currentPathPoints, selectedAddress, onUpdateAddress])
+    
+    // Exit draw mode after completing one path
+    if (onScenarioSelect) {
+      onScenarioSelect(null)
+    }
+  }, [selectedAddressId, activeScenario, currentPathPoints, selectedAddress, onUpdateAddress, onScenarioSelect])
 
   const handleCancelFinishPath = useCallback(() => {
     // Remove the last point from current path
