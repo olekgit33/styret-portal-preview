@@ -12,15 +12,17 @@ function ProgressBar({ completedCount, totalCount, label = '' }: ProgressBarProp
   const progressPercentage = (completedCount / totalCount) * 100
 
   return (
-    <div className="px-2 py-1.5 border-b border-gray-200/50 bg-white/80 backdrop-blur-sm">
-      {label && <div className="mb-0.5 text-xs text-gray-600 font-medium">{label}</div>}
-      <div className="w-full h-1 bg-gray-200/60 rounded-full overflow-hidden shadow-inner">
+    <div className="px-2.5 py-2 border-b border-slate-200/40 bg-gradient-to-r from-white via-slate-50/60 to-white backdrop-blur-md shadow-[0_1px_0_0_rgba(255,255,255,0.8)]">
+      {label && <div className="mb-1 text-xs text-slate-600 font-semibold">{label}</div>}
+      <div className="w-full h-1.5 bg-slate-200/70 rounded-full overflow-hidden shadow-[inset_0_2px_4px_rgba(0,0,0,0.06)]">
         <div
-          className="h-full bg-gradient-to-r from-green-500 to-emerald-600 transition-all duration-300 ease-out shadow-sm"
+          className="h-full bg-gradient-to-r from-emerald-500 via-green-500 to-teal-600 transition-all duration-500 ease-out shadow-[0_2px_4px_rgba(16,185,129,0.3)] relative overflow-hidden"
           style={{ width: `${progressPercentage}%` }}
-        />
+        >
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-pulse" />
+        </div>
       </div>
-      <div className="mt-0.5 text-[10px] text-gray-500 font-medium">
+      <div className="mt-1 text-[10px] text-slate-600 font-bold">
         {completedCount} / {totalCount} completed
       </div>
     </div>

@@ -175,48 +175,56 @@ function WizardView({
   return (
     <div className="flex-1 flex flex-col overflow-hidden min-h-0">
       {/* Back Button */}
-      <div className="flex-shrink-0 px-2 py-1.5 bg-white/80 backdrop-blur-sm border-b border-gray-200/50">
+      <div className="flex-shrink-0 px-2.5 py-1.5 bg-gradient-to-r from-white via-slate-50/80 to-white backdrop-blur-md border-b border-slate-200/40 shadow-[0_1px_0_0_rgba(255,255,255,0.8)]">
         <button
           onClick={onBack}
-          className="px-2.5 py-1 bg-white/60 hover:bg-white border border-gray-300/50 rounded-lg text-xs font-medium cursor-pointer hover:border-gray-400 transition-all duration-200 shadow-sm hover:shadow"
+          className="group px-2.5 py-1 bg-white/70 hover:bg-white backdrop-blur-sm border border-slate-300/50 rounded-lg text-xs font-semibold cursor-pointer hover:border-slate-400/60 transition-all duration-200 shadow-[0_1px_2px_rgba(0,0,0,0.05)] hover:shadow-[0_2px_4px_rgba(0,0,0,0.1)] hover:scale-[1.02] text-slate-700 hover:text-slate-900"
         >
-          ← Back
+          <span className="inline-flex items-center gap-1">
+            <svg className="w-3 h-3 group-hover:-translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
+            </svg>
+            Back
+          </span>
         </button>
       </div>
 
       {/* Current Address Section */}
-      <div className="flex-shrink-0 px-2 py-2 bg-gradient-to-r from-blue-50/80 to-indigo-50/80 backdrop-blur-sm border-b border-gray-200/50">
-        <div className="flex items-start gap-2">
-          <div className="flex-shrink-0 w-6 h-6 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-md flex items-center justify-center shadow-sm">
+      <div className="flex-shrink-0 px-2.5 py-1.5 bg-gradient-to-r from-slate-50 via-blue-50/50 to-indigo-50/50 backdrop-blur-md border-b border-slate-200/40 shadow-[0_1px_0_0_rgba(255,255,255,0.8)]">
+        <div className="flex items-center gap-2">
+          <div className="flex-shrink-0 w-5 h-5 bg-gradient-to-br from-blue-500 via-indigo-500 to-purple-600 rounded-lg flex items-center justify-center shadow-[0_2px_8px_rgba(59,130,246,0.4)] ring-1 ring-blue-200/50">
             <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
             </svg>
           </div>
-          <div className="flex-1 min-w-0 space-y-1">
-            <div className="flex items-center gap-1.5">
-              <span className="text-[10px] font-semibold text-blue-700 uppercase tracking-wide">Address</span>
-              {address.validatedAddress && (
-                <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-green-100/80 text-green-800 backdrop-blur-sm">
-                  <svg className="w-2.5 h-2.5 mr-0.5" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                  </svg>
-                  Validated
-                </span>
-              )}
-            </div>
-            <div className="bg-white/70 backdrop-blur-sm rounded-md px-1.5 py-1 border border-gray-200/50 shadow-sm">
-              <div className="text-[10px] text-gray-500 font-medium mb-0.5">Original</div>
-              <div className="text-xs text-gray-900 truncate" title={address.givenAddress}>
-                {address.givenAddress}
-              </div>
-            </div>
-            {address.validatedAddress && (
-              <div className="bg-green-50/70 backdrop-blur-sm rounded-md px-1.5 py-1 border border-green-200/50 shadow-sm">
-                <div className="text-[10px] text-green-700 font-medium mb-0.5">Validated</div>
-                <div className="text-xs font-semibold text-green-900 truncate" title={address.validatedAddress}>
-                  {address.validatedAddress}
+          <div className="flex-1 min-w-0 flex items-center gap-2 overflow-hidden">
+            {address.validatedAddress ? (
+              <>
+                <div className="flex-1 min-w-0 flex items-center gap-1.5 px-2 py-1 bg-slate-100/60 backdrop-blur-sm rounded-lg border border-slate-200/40">
+                  <span className="text-[10px] font-medium text-slate-500 uppercase tracking-wider flex-shrink-0">Original:</span>
+                  <span className="text-xs text-slate-600 truncate" title={address.givenAddress}>
+                    {address.givenAddress}
+                  </span>
                 </div>
+                <div className="flex items-center gap-1.5">
+                  <svg className="w-3 h-3 text-emerald-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <div className="flex-1 min-w-0 flex items-center gap-1.5 px-2 py-1 bg-gradient-to-r from-emerald-50/80 to-teal-50/60 backdrop-blur-sm rounded-lg border border-emerald-200/50 shadow-[0_1px_2px_rgba(16,185,129,0.2)] ring-1 ring-emerald-100/50">
+                  <span className="text-[10px] font-semibold text-emerald-700 uppercase tracking-wider flex-shrink-0">Validated:</span>
+                  <span className="text-xs font-semibold text-emerald-900 truncate" title={address.validatedAddress}>
+                    {address.validatedAddress}
+                  </span>
+                </div>
+              </>
+            ) : (
+              <div className="flex-1 min-w-0 flex items-center gap-1.5 px-2 py-1 bg-slate-100/60 backdrop-blur-sm rounded-lg border border-slate-200/40">
+                <span className="text-[10px] font-medium text-slate-500 uppercase tracking-wider flex-shrink-0">Original:</span>
+                <span className="text-xs text-slate-600 truncate" title={address.givenAddress}>
+                  {address.givenAddress}
+                </span>
               </div>
             )}
           </div>
@@ -231,26 +239,28 @@ function WizardView({
       {/* Wizard Steps - Scrollable Section */}
       <div className="flex-1 overflow-y-scroll overflow-x-hidden p-2 flex flex-col gap-2 min-h-0" style={{ scrollbarWidth: 'thin', scrollbarColor: '#c1c1c1 #f1f1f1' }}>
         {/* Validation Step */}
-        <div className={`p-2.5 bg-white/80 backdrop-blur-sm rounded-xl border border-gray-200/50 shadow-sm hover:shadow-md flex flex-col relative transition-all duration-200 ${!validationEnabled ? 'opacity-60' : ''}`}>
+        <div className={`p-3 bg-white/90 backdrop-blur-md rounded-2xl border border-slate-200/60 shadow-[0_2px_8px_rgba(0,0,0,0.04)] hover:shadow-[0_4px_12px_rgba(0,0,0,0.08)] flex flex-col relative transition-all duration-300 hover:border-slate-300/60 ${!validationEnabled ? 'opacity-60' : 'hover:scale-[1.01]'}`}>
           {isStepCompleted(1) && (
-            <div className="absolute top-1.5 right-1.5 w-5 h-5 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full flex items-center justify-center shadow-sm">
-              <span className="text-white text-[10px] font-bold">✓</span>
+            <div className="absolute top-2 right-2 w-5 h-5 bg-gradient-to-br from-emerald-500 via-green-500 to-teal-600 rounded-full flex items-center justify-center shadow-[0_2px_6px_rgba(16,185,129,0.4)] ring-2 ring-emerald-100/50">
+              <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+              </svg>
             </div>
           )}
-          <div className="flex items-center text-sm font-semibold mb-1.5">
+          <div className="flex items-center text-sm font-bold mb-2 text-slate-800">
             {getActiveStep() === 1 && (
-              <span className="mr-1.5 text-primary-500 text-xs">▶</span>
+              <span className="mr-1.5 text-blue-600 text-sm animate-pulse">▶</span>
             )}
-            <span className="text-sm">Step 1. Validation</span>
+            <span className="bg-gradient-to-r from-slate-800 to-slate-700 bg-clip-text text-transparent">Step 1. Validation</span>
           </div>
-          <div className="space-y-1.5 flex-1 flex flex-col">
-            <label className="block text-xs mb-0.5 text-gray-600">We found similar addresses. Please select the correct one to continue.</label>
+          <div className="space-y-2 flex-1 flex flex-col">
+            <label className="block text-xs mb-1 text-slate-600 font-medium leading-relaxed">We found similar addresses. Please select the correct one to continue.</label>
             <select
               value={address.selectedAddress || ''}
               onChange={(e) => handleAddressSelect(e.target.value)}
               onFocus={() => setIsSelectFocused(true)}
               onBlur={() => setIsSelectFocused(false)}
-              className="w-full px-2 py-1.5 bg-white/90 backdrop-blur-sm border border-gray-300/50 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-primary-400 transition-all shadow-sm"
+              className="w-full px-3 py-2 bg-white/95 backdrop-blur-sm border border-slate-300/60 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-400/60 transition-all shadow-[0_1px_3px_rgba(0,0,0,0.1)] hover:shadow-[0_2px_6px_rgba(0,0,0,0.15)] hover:border-slate-400/60 font-medium text-slate-700"
             >
               <option value="">Select an address...</option>
               {searchAddresses.map((addr, idx) => (
@@ -264,7 +274,7 @@ function WizardView({
 
         {/* Place Door Step */}
         <div 
-          className={`p-2.5 bg-white/80 backdrop-blur-sm rounded-xl border border-gray-200/50 shadow-sm hover:shadow-md flex flex-col relative transition-all duration-200 ${!doorEnabled ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer hover:bg-white/90'}`}
+          className={`p-3 bg-white/90 backdrop-blur-md rounded-2xl border border-slate-200/60 shadow-[0_2px_8px_rgba(0,0,0,0.04)] hover:shadow-[0_4px_12px_rgba(0,0,0,0.08)] flex flex-col relative transition-all duration-300 hover:border-slate-300/60 ${!doorEnabled ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer hover:scale-[1.01]'}`}
           onClick={() => {
             if (doorEnabled && onEditDoorChange) {
               onEditDoorChange(!isEditingDoor)
@@ -272,23 +282,28 @@ function WizardView({
           }}
         >
           {isStepCompleted(2) && (
-            <div className="absolute top-1.5 right-1.5 w-5 h-5 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full flex items-center justify-center shadow-sm">
-              <span className="text-white text-[10px] font-bold">✓</span>
+            <div className="absolute top-2 right-2 w-5 h-5 bg-gradient-to-br from-emerald-500 via-green-500 to-teal-600 rounded-full flex items-center justify-center shadow-[0_2px_6px_rgba(16,185,129,0.4)] ring-2 ring-emerald-100/50">
+              <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+              </svg>
             </div>
           )}
-          <div className="flex items-center text-sm font-semibold mb-1.5">
+          <div className="flex items-center text-sm font-bold mb-2 text-slate-800">
             {(getActiveStep() === 2 || isEditingDoor) && (
-              <span className="mr-1.5 text-primary-500 text-xs">▶</span>
+              <span className="mr-1.5 text-blue-600 text-sm animate-pulse">▶</span>
             )}
-            <span className="text-sm">Step 2. Placing Door</span>
+            <span className="bg-gradient-to-r from-slate-800 to-slate-700 bg-clip-text text-transparent">Step 2. Placing Door</span>
           </div>
-          <div className="text-xs text-gray-600 flex-1 flex items-center leading-relaxed">
+          <div className="text-xs text-slate-600 flex-1 flex items-center leading-relaxed font-medium">
             {address.doorPosition ? (
-              <div className="text-green-600 font-medium">
-                {isEditingDoor ? 'Click on the map to change the door position' : '✓ Door placed at ' + address.doorPosition.lat.toFixed(4) + ', ' + address.doorPosition.lng.toFixed(4)}
+              <div className="flex items-center gap-1.5 text-emerald-600 font-semibold">
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                </svg>
+                {isEditingDoor ? 'Click on the map to change the door position' : 'Door placed at ' + address.doorPosition.lat.toFixed(4) + ', ' + address.doorPosition.lng.toFixed(4)}
               </div>
             ) : (
-              <div>
+              <div className="text-slate-500">
                 Click on the map to place the door. The door icon will follow your mouse cursor.
               </div>
             )}
@@ -296,20 +311,22 @@ function WizardView({
         </div>
 
         {/* Scenarios Step */}
-        <div ref={step3Ref} className={`p-2.5 bg-white/80 backdrop-blur-sm rounded-xl border border-gray-200/50 shadow-sm hover:shadow-md flex flex-col relative transition-all duration-200 ${!scenariosEnabled ? 'opacity-60' : ''}`}>
+        <div ref={step3Ref} className={`p-3 bg-white/90 backdrop-blur-md rounded-2xl border border-slate-200/60 shadow-[0_2px_8px_rgba(0,0,0,0.04)] hover:shadow-[0_4px_12px_rgba(0,0,0,0.08)] flex flex-col relative transition-all duration-300 hover:border-slate-300/60 ${!scenariosEnabled ? 'opacity-60' : 'hover:scale-[1.01]'}`}>
           {isStepCompleted(3) && (
-            <div className="absolute top-1.5 right-1.5 w-5 h-5 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full flex items-center justify-center shadow-sm">
-              <span className="text-white text-[10px] font-bold">✓</span>
+            <div className="absolute top-2 right-2 w-5 h-5 bg-gradient-to-br from-emerald-500 via-green-500 to-teal-600 rounded-full flex items-center justify-center shadow-[0_2px_6px_rgba(16,185,129,0.4)] ring-2 ring-emerald-100/50">
+              <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+              </svg>
             </div>
           )}
-          <div className="flex items-center text-sm font-semibold mb-1.5">
+          <div className="flex items-center text-sm font-bold mb-2 text-slate-800">
             {getActiveStep() === 3 && !activeScenario && !isEditingDoor && (
-              <span className="mr-1.5 text-primary-500 text-xs">▶</span>
+              <span className="mr-1.5 text-blue-600 text-sm animate-pulse">▶</span>
             )}
-            <span className="text-sm">Step 3. Draw Path</span>
+            <span className="bg-gradient-to-r from-slate-800 to-slate-700 bg-clip-text text-transparent">Step 3. Draw Path</span>
           </div>
-          <label className="block text-xs mb-1.5 text-gray-600">There are 4 scenarios, each represents a path.</label>
-          <div className="flex flex-col gap-1.5 flex-1">
+          <label className="block text-xs mb-2 text-slate-600 font-medium leading-relaxed">There are 4 scenarios, each represents a path.</label>
+          <div className="flex flex-col gap-2 flex-1">
             {SCENARIOS.map((scenario) => {
               const hasPath = !!address.scenarioPaths?.[scenario]
               const stepEnabled = isCategoryEnabled('Scenarios')
@@ -318,15 +335,15 @@ function WizardView({
               return (
                 <div
                   key={scenario}
-                  className={`flex items-center p-1.5 rounded-lg border transition-all duration-200 ${
+                  className={`flex items-center p-2.5 rounded-xl border transition-all duration-300 ${
                     hasPath 
-                      ? 'bg-gradient-to-r from-green-50/80 to-emerald-50/80 border-green-400/50 backdrop-blur-sm shadow-sm' 
+                      ? 'bg-gradient-to-r from-emerald-50/90 via-green-50/80 to-teal-50/70 border-emerald-300/60 backdrop-blur-sm shadow-[0_2px_6px_rgba(16,185,129,0.15)] ring-1 ring-emerald-100/50 hover:shadow-[0_4px_10px_rgba(16,185,129,0.2)]' 
                       : isActive && stepEnabled
-                      ? 'bg-gradient-to-r from-primary-50/80 to-yellow-50/80 border-primary-400/70 ring-1 ring-primary-300/50 backdrop-blur-sm shadow-sm' 
+                      ? 'bg-gradient-to-r from-blue-50/90 via-indigo-50/80 to-purple-50/70 border-blue-400/70 ring-2 ring-blue-200/50 backdrop-blur-sm shadow-[0_2px_8px_rgba(59,130,246,0.25)] hover:shadow-[0_4px_12px_rgba(59,130,246,0.3)] scale-[1.02]' 
                       : stepEnabled
-                      ? 'bg-gray-50/60 border-gray-200/50 hover:border-gray-300/50 hover:bg-gray-50/80 backdrop-blur-sm' 
-                      : 'bg-gray-50/40 border-gray-200/30 opacity-60'
-                  } ${stepEnabled ? 'cursor-pointer' : 'cursor-not-allowed'}`}
+                      ? 'bg-slate-50/70 border-slate-200/60 hover:border-slate-300/70 hover:bg-slate-100/80 backdrop-blur-sm shadow-[0_1px_3px_rgba(0,0,0,0.05)] hover:shadow-[0_2px_6px_rgba(0,0,0,0.1)]' 
+                      : 'bg-slate-50/40 border-slate-200/30 opacity-60'
+                  } ${stepEnabled ? 'cursor-pointer hover:scale-[1.01]' : 'cursor-not-allowed'}`}
                   onClick={() => {
                     if (stepEnabled && address.doorPosition && onScenarioSelect) {
                       onScenarioSelect(isActive ? null : scenario)
@@ -334,10 +351,14 @@ function WizardView({
                   }}
                 >
                   {isActive && stepEnabled && !hasPath && !isEditingDoor && (
-                    <span className="mr-1.5 text-primary-500 text-xs">▶</span>
+                    <span className="mr-2 text-blue-600 text-xs animate-pulse">▶</span>
                   )}
-                  {hasPath && <span className="mr-1.5 text-green-600 text-xs">✓</span>}
-                  <span className="text-xs font-medium capitalize text-gray-700">{scenario}</span>
+                  {hasPath && (
+                    <svg className="w-4 h-4 mr-2 text-emerald-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                    </svg>
+                  )}
+                  <span className="text-xs font-semibold capitalize text-slate-700">{scenario}</span>
                 </div>
               )
             })}
@@ -345,53 +366,60 @@ function WizardView({
         </div>
 
         {/* Parking Spot Step */}
-        <div className={`p-2.5 bg-white/80 backdrop-blur-sm rounded-xl border border-gray-200/50 shadow-sm hover:shadow-md flex flex-col relative transition-all duration-200 ${!parkingEnabled ? 'opacity-60' : ''}`}>
+        <div className={`p-3 bg-white/90 backdrop-blur-md rounded-2xl border border-slate-200/60 shadow-[0_2px_8px_rgba(0,0,0,0.04)] hover:shadow-[0_4px_12px_rgba(0,0,0,0.08)] flex flex-col relative transition-all duration-300 hover:border-slate-300/60 ${!parkingEnabled ? 'opacity-60' : 'hover:scale-[1.01]'}`}>
           {isStepCompleted(4) && (
-            <div className="absolute top-1.5 right-1.5 w-5 h-5 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full flex items-center justify-center shadow-sm">
-              <span className="text-white text-[10px] font-bold">✓</span>
+            <div className="absolute top-2 right-2 w-5 h-5 bg-gradient-to-br from-emerald-500 via-green-500 to-teal-600 rounded-full flex items-center justify-center shadow-[0_2px_6px_rgba(16,185,129,0.4)] ring-2 ring-emerald-100/50">
+              <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+              </svg>
             </div>
           )}
-          <div className="flex items-center text-sm font-semibold mb-1.5">
+          <div className="flex items-center text-sm font-bold mb-2 text-slate-800">
             {getActiveStep() === 4 && (
-              <span className="mr-1.5 text-primary-500 text-xs">▶</span>
+              <span className="mr-1.5 text-blue-600 text-sm animate-pulse">▶</span>
             )}
-            <span className="text-sm">Step 4. Parking Spot</span>
+            <span className="bg-gradient-to-r from-slate-800 to-slate-700 bg-clip-text text-transparent">Step 4. Parking Spot</span>
           </div>
-          <div className="text-xs text-gray-600 flex-1 flex items-center">
+          <div className="text-xs text-slate-600 flex-1 flex items-center font-medium">
             {address.parkingSpotSet ? (
-              <div className="text-green-600 font-medium">✓ Parking spot set</div>
+              <div className="flex items-center gap-1.5 text-emerald-600 font-semibold">
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                </svg>
+                Parking spot set
+              </div>
             ) : (
-              <div>Click on the map to set the parking spot.</div>
+              <div className="text-slate-500">Click on the map to set the parking spot.</div>
             )}
           </div>
         </div>
       </div>
 
       {/* Navigation Buttons */}
-      <div className="flex-shrink-0 px-3 py-2 bg-gradient-to-br from-gray-50/90 to-white/90 backdrop-blur-sm border-t border-gray-200/50">
-        <div className="flex items-center justify-between gap-2">
+      <div className="flex-shrink-0 px-3 py-2.5 bg-gradient-to-r from-white via-slate-50/80 to-white backdrop-blur-md border-t border-slate-200/40 shadow-[0_-1px_0_0_rgba(255,255,255,0.8)]">
+        <div className="flex items-center justify-between gap-2.5">
           {/* Previous Button */}
           <button
             onClick={() => onNavigate('prev')}
-            className="group flex items-center gap-1.5 px-3 py-1.5 bg-white/80 backdrop-blur-sm border border-gray-300/50 rounded-lg cursor-pointer text-xs font-semibold hover:border-primary-400/50 hover:bg-primary-50/80 hover:shadow-sm transition-all duration-200 flex-shrink-0"
+            className="group flex items-center gap-1.5 px-3 py-2 bg-white/80 backdrop-blur-sm border border-slate-300/60 rounded-xl cursor-pointer text-xs font-bold hover:border-blue-400/60 hover:bg-blue-50/80 hover:shadow-[0_2px_8px_rgba(59,130,246,0.2)] transition-all duration-300 flex-shrink-0 hover:scale-[1.02] text-slate-700 hover:text-blue-700"
           >
-            <svg className="w-3.5 h-3.5 text-gray-600 group-hover:text-primary-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-3.5 h-3.5 text-slate-600 group-hover:text-blue-600 group-hover:-translate-x-0.5 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
             </svg>
-            <span className="text-gray-700 group-hover:text-primary-600 transition-colors">Prev</span>
+            <span className="text-slate-700 group-hover:text-blue-700 transition-colors">Prev</span>
           </button>
 
           {/* Address Progress Indicator */}
-          <div className="flex items-center gap-2 px-2.5 py-1.5 bg-white/80 backdrop-blur-sm rounded-full border border-gray-200/50 shadow-sm">
-            <div className="flex items-center gap-1.5">
-              <div className="w-5 h-5 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center shadow-sm">
-                <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="flex items-center gap-2 px-3 py-2 bg-white/90 backdrop-blur-sm rounded-full border border-slate-200/60 shadow-[0_2px_8px_rgba(0,0,0,0.06)] ring-1 ring-slate-100/50">
+            <div className="flex items-center gap-2">
+              <div className="w-6 h-6 bg-gradient-to-br from-blue-500 via-indigo-500 to-purple-600 rounded-full flex items-center justify-center shadow-[0_2px_8px_rgba(59,130,246,0.4)] ring-1 ring-blue-200/50">
+                <svg className="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
               <div className="text-left">
-                <div className="text-[10px] text-gray-500 font-medium">Progress</div>
-                <div className="text-xs font-bold text-gray-900">
+                <div className="text-[10px] text-slate-500 font-semibold uppercase tracking-wide">Progress</div>
+                <div className="text-xs font-bold text-slate-900">
                   {completedCount}/{totalAddresses}
                 </div>
               </div>
@@ -401,10 +429,10 @@ function WizardView({
           {/* Next Button */}
           <button
             onClick={() => onNavigate('next')}
-            className="group flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-primary-500 to-primary-600 text-white rounded-lg cursor-pointer text-xs font-semibold hover:from-primary-600 hover:to-primary-700 shadow-sm hover:shadow-md transform hover:scale-105 transition-all duration-200 flex-shrink-0"
+            className="group flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white rounded-xl cursor-pointer text-xs font-bold hover:from-blue-700 hover:via-indigo-700 hover:to-purple-700 shadow-[0_4px_12px_rgba(59,130,246,0.4)] hover:shadow-[0_6px_16px_rgba(59,130,246,0.5)] transform hover:scale-105 transition-all duration-300 flex-shrink-0"
           >
             <span className="text-white">Next</span>
-            <svg className="w-3.5 h-3.5 text-white group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-3.5 h-3.5 text-white group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
             </svg>
           </button>
