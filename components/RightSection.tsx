@@ -2,7 +2,7 @@
 
 import { useState, memo, useCallback } from 'react'
 import dynamic from 'next/dynamic'
-import { Address } from '@/types'
+import { Address, ScenarioType } from '@/types'
 import DoorConfirmation from './DoorConfirmation'
 
 // Dynamically import MapContainer to avoid SSR issues with Leaflet
@@ -13,6 +13,8 @@ interface RightSectionProps {
   selectedAddressId: string | null
   onUpdateAddress: (id: string, updates: Partial<Address>) => void
   addressCoordinates?: { lat: number; lng: number } | null
+  activeScenario?: ScenarioType | null
+  onScenarioSelect?: (scenario: ScenarioType | null) => void
 }
 
 function RightSection({
@@ -20,6 +22,8 @@ function RightSection({
   selectedAddressId,
   onUpdateAddress,
   addressCoordinates,
+  activeScenario,
+  onScenarioSelect,
 }: RightSectionProps) {
   const [mousePosition, setMousePosition] = useState<{ x: number; y: number } | null>(null)
   const [isMouseOverMap, setIsMouseOverMap] = useState(false)
