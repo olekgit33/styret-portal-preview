@@ -15,6 +15,7 @@ interface MapContainerProps {
   activeScenario?: ScenarioType | null
   isEditingDoor?: boolean
   onDoorDragEnd?: (lat: number, lng: number) => void
+  onScreenPositionUpdate?: ((lat: number, lng: number, screenPos: { x: number; y: number }) => void) | null
 }
 
 // Fix for default marker icon issue
@@ -56,19 +57,80 @@ function MapCenterUpdater({ center }: { center: [number, number] }) {
   return null
 }
 
+// Component to update screen position for pending door
+function ScreenPositionUpdater({
+  pendingDoorPosition,
+  onScreenPositionUpdate,
+}: {
+  pendingDoorPosition?: { lat: number; lng: number }
+  onScreenPositionUpdate?: ((lat: number, lng: number, screenPos: { x: number; y: number }) => void) | null
+}) {
+  const map = useMap()
+  
+  useEffect(() => {
+    if (!pendingDoorPosition || !onScreenPositionUpdate) return
+    
+    // Get the map container element
+    const container = map.getContainer()
+    if (!container) return
+    
+    // Convert lat/lng to pixel coordinates relative to map
+    const point = map.latLngToContainerPoint([pendingDoorPosition.lat, pendingDoorPosition.lng])
+    
+    // Get the container's bounding box
+    const containerRect = container.getBoundingClientRect()
+    
+    // Calculate screen position (container position + point position)
+    const screenX = containerRect.left + point.x
+    const screenY = containerRect.top + point.y - 60 // Offset above marker
+    
+    onScreenPositionUpdate(pendingDoorPosition.lat, pendingDoorPosition.lng, { x: screenX, y: screenY })
+  }, [pendingDoorPosition, map, onScreenPositionUpdate])
+  
+  // Also update on map move/zoom
+  useEffect(() => {
+    if (!pendingDoorPosition || !onScreenPositionUpdate) return
+    
+    const updatePosition = () => {
+      const container = map.getContainer()
+      if (!container) return
+      
+      const point = map.latLngToContainerPoint([pendingDoorPosition.lat, pendingDoorPosition.lng])
+      const containerRect = container.getBoundingClientRect()
+      const screenX = containerRect.left + point.x
+      const screenY = containerRect.top + point.y - 60
+      
+      onScreenPositionUpdate(pendingDoorPosition.lat, pendingDoorPosition.lng, { x: screenX, y: screenY })
+    }
+    
+    map.on('move', updatePosition)
+    map.on('zoom', updatePosition)
+    
+    return () => {
+      map.off('move', updatePosition)
+      map.off('zoom', updatePosition)
+    }
+  }, [pendingDoorPosition, map, onScreenPositionUpdate])
+  
+  return null
+}
+
 // Draggable door marker component
 function DraggableDoorMarker({
   position,
   icon,
   onDragEnd,
   isEditing,
+  onScreenPositionUpdate,
 }: {
   position: [number, number]
   icon: L.Icon
   onDragEnd?: (lat: number, lng: number) => void
   isEditing?: boolean
+  onScreenPositionUpdate?: ((lat: number, lng: number, screenPos: { x: number; y: number }) => void) | null
 }) {
   const markerRef = React.useRef<L.Marker | null>(null)
+  const map = useMap()
   
   useEffect(() => {
     if (markerRef.current && isEditing) {
@@ -89,6 +151,19 @@ function DraggableDoorMarker({
           const { lat, lng } = marker.getLatLng()
           if (onDragEnd) {
             onDragEnd(lat, lng)
+          }
+          // Update screen position after drag
+          if (onScreenPositionUpdate) {
+            setTimeout(() => {
+              const container = map.getContainer()
+              if (!container) return
+              const point = map.latLngToContainerPoint([lat, lng])
+              const containerRect = container.getBoundingClientRect()
+              onScreenPositionUpdate(lat, lng, {
+                x: containerRect.left + point.x,
+                y: containerRect.top + point.y - 60,
+              })
+            }, 50)
           }
         },
       }}
@@ -145,6 +220,7 @@ export default function MapContainer({
   activeScenario,
   isEditingDoor,
   onDoorDragEnd,
+  onScreenPositionUpdate,
 }: MapContainerProps) {
   const defaultCenter: [number, number] = [40.7128, -74.006] // Default to New York
   const defaultZoom = 13
@@ -213,12 +289,21 @@ export default function MapContainer({
         />
         <MapCenterUpdater center={center} />
         <MapClickHandler onMapClick={onMapClick} mapType={mapType} />
+        {mapType === 'outline' && pendingDoorPosition && (
+          <ScreenPositionUpdater
+            pendingDoorPosition={pendingDoorPosition}
+            onScreenPositionUpdate={onScreenPositionUpdate || undefined}
+          />
+        )}
         
-        {/* Pending door position (orange) */}
+        {/* Pending door position (orange) - draggable when editing */}
         {pendingDoorPosition && (
-          <Marker
+          <DraggableDoorMarker
             position={[pendingDoorPosition.lat, pendingDoorPosition.lng]}
             icon={pendingDoorIcon}
+            onDragEnd={onDoorDragEnd}
+            isEditing={isEditingDoor || false}
+            onScreenPositionUpdate={mapType === 'outline' ? onScreenPositionUpdate || undefined : undefined}
           />
         )}
         

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo, memo, useCallback } from 'react'
+import { useState, useMemo, memo, useCallback, useEffect, useRef } from 'react'
 import { Address, Category, ScenarioType } from '@/types'
 import ProgressBar from './ProgressBar'
 
@@ -34,6 +34,19 @@ function WizardView({
 }: WizardViewProps) {
   const [searchQuery, setSearchQuery] = useState('')
   const [isSelectFocused, setIsSelectFocused] = useState(false)
+  const step3Ref = useRef<HTMLDivElement>(null)
+  const prevDoorPosition = useRef<{ lat: number; lng: number } | undefined>(address.doorPosition)
+  
+  // Auto-scroll to step 3 when door is placed
+  useEffect(() => {
+    if (address.doorPosition && !prevDoorPosition.current && step3Ref.current) {
+      // Door was just placed, scroll to step 3
+      setTimeout(() => {
+        step3Ref.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+      }, 100)
+    }
+    prevDoorPosition.current = address.doorPosition
+  }, [address.doorPosition])
 
   // Calculate category completion
   const categoryProgress = useMemo(() => {
@@ -283,7 +296,7 @@ function WizardView({
         </div>
 
         {/* Scenarios Step */}
-        <div className={`p-4 bg-white rounded-lg border shadow-sm flex flex-col relative ${!scenariosEnabled ? 'opacity-60 border-gray-200' : 'border-gray-200'}`}>
+        <div ref={step3Ref} className={`p-4 bg-white rounded-lg border shadow-sm flex flex-col relative ${!scenariosEnabled ? 'opacity-60 border-gray-200' : 'border-gray-200'}`}>
           {isStepCompleted(3) && (
             <div className="absolute top-2 right-2 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
               <span className="text-white text-xs font-bold">✓</span>

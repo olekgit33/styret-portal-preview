@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, memo, useCallback } from 'react'
+import { useState, memo, useCallback, useEffect } from 'react'
 import dynamic from 'next/dynamic'
 import { Address, ScenarioType } from '@/types'
 import DoorConfirmation from './DoorConfirmation'
@@ -35,6 +35,35 @@ function RightSection({
   const [currentPathPoints, setCurrentPathPoints] = useState<{ lat: number; lng: number }[]>([])
   const [pendingPathConfirmation, setPendingPathConfirmation] = useState<{ x: number; y: number } | null>(null)
   const [lastPathClickPosition, setLastPathClickPosition] = useState<{ x: number; y: number } | null>(null)
+  
+  // Auto-place door at center when editing starts
+  useEffect(() => {
+    if (isEditingDoor && selectedAddress && !pendingDoorPosition) {
+      // If door doesn't exist yet, place it at center. If it exists, allow re-positioning
+      if (!selectedAddress.doorPosition) {
+        // Use address coordinates (map center) or default
+        const centerLat = addressCoordinates?.lat || (selectedAddress.coordinates?.lat) || 40.7128
+        const centerLng = addressCoordinates?.lng || (selectedAddress.coordinates?.lng) || -74.006
+        
+        // Calculate screen position (will be updated once map is ready)
+        // For now, use center of screen as approximation
+        const screenX = window.innerWidth * 0.15 // Left map is 1/3 of screen, so center is ~15% from left
+        const screenY = window.innerHeight * 0.5 // Center vertically
+        
+        setPendingDoorPosition({ lat: centerLat, lng: centerLng, x: screenX, y: screenY })
+      } else if (selectedAddress.doorPosition && !pendingDoorPosition) {
+        // Door exists, start editing by showing it as pending (convert confirmed to pending)
+        const screenX = window.innerWidth * 0.15
+        const screenY = window.innerHeight * 0.5
+        setPendingDoorPosition({
+          lat: selectedAddress.doorPosition.lat,
+          lng: selectedAddress.doorPosition.lng,
+          x: screenX,
+          y: screenY,
+        })
+      }
+    }
+  }, [isEditingDoor, selectedAddress, addressCoordinates, pendingDoorPosition])
 
   // Check if we should show door icon (only when Placing Door step is active or editing door)
   const shouldShowDoor =
@@ -105,6 +134,29 @@ function RightSection({
       onUpdateAddress(selectedAddressId, { parkingSpotSet: true })
     }
   }, [selectedAddress, selectedAddressId, onUpdateAddress, pendingDoorPosition, pendingPathConfirmation, currentPathPoints, mousePosition, isEditingDoor, activeScenario])
+
+  const handleDoorDragEnd = useCallback((lat: number, lng: number) => {
+    if (pendingDoorPosition) {
+      // Update pending door position after drag
+      setPendingDoorPosition({ ...pendingDoorPosition, lat, lng })
+    }
+  }, [pendingDoorPosition])
+
+  const handleScreenPositionUpdate = useCallback((lat: number, lng: number, screenPos: { x: number; y: number }) => {
+    if (pendingDoorPosition) {
+      // Update screen position for confirmation UI (works for both initial position and after drag)
+      setPendingDoorPosition(prev => {
+        if (!prev) return null
+        // If lat/lng matches or this is an update after drag, update the position
+        const shouldUpdate = (prev.lat === lat && prev.lng === lng) || 
+                            (Math.abs(prev.lat - lat) < 0.0001 && Math.abs(prev.lng - lng) < 0.0001)
+        if (shouldUpdate) {
+          return { ...prev, x: screenPos.x, y: screenPos.y, lat, lng }
+        }
+        return prev
+      })
+    }
+  }, [pendingDoorPosition])
 
   const handleConfirmDoor = useCallback(() => {
     if (!selectedAddressId || !pendingDoorPosition) return
@@ -178,6 +230,9 @@ function RightSection({
                   addressCoordinates={addressCoordinates}
                   currentPathPoints={currentPathPoints}
                   activeScenario={activeScenario}
+                  isEditingDoor={isEditingDoor}
+                  onDoorDragEnd={handleDoorDragEnd}
+                  onScreenPositionUpdate={handleScreenPositionUpdate}
                 />
       </div>
 
@@ -198,6 +253,8 @@ function RightSection({
             addressCoordinates={addressCoordinates}
             currentPathPoints={currentPathPoints}
             activeScenario={activeScenario}
+            isEditingDoor={isEditingDoor}
+            onDoorDragEnd={handleDoorDragEnd}
           />
         </div>
 
@@ -216,6 +273,8 @@ function RightSection({
             addressCoordinates={addressCoordinates}
             currentPathPoints={currentPathPoints}
             activeScenario={activeScenario}
+            isEditingDoor={isEditingDoor}
+            onDoorDragEnd={handleDoorDragEnd}
           />
         </div>
       </div>
