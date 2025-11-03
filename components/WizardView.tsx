@@ -37,6 +37,64 @@ function WizardView({
   const step3Ref = useRef<HTMLDivElement>(null)
   const prevDoorPosition = useRef<{ lat: number; lng: number } | undefined>(address.doorPosition)
   
+  // Track completion states to detect when steps become completed
+  const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set())
+  const [justCompleted, setJustCompleted] = useState<Set<number>>(new Set())
+  const prevValidationState = useRef<boolean>(!!(address.validatedAddress || address.selectedAddress))
+  const prevDoorState = useRef<boolean>(!!address.doorPosition)
+  const prevScenariosState = useRef<boolean>(address.scenarioPaths ? SCENARIOS.every(s => address.scenarioPaths?.[s]) : false)
+  const prevParkingState = useRef<boolean>(!!address.parkingSpotSet)
+  
+  // Track step completions and trigger animations
+  useEffect(() => {
+    const newJustCompleted = new Set<number>()
+    
+    // Step 1: Validation
+    const isStep1Completed = !!(address.validatedAddress || address.selectedAddress)
+    if (isStep1Completed && !prevValidationState.current) {
+      newJustCompleted.add(1)
+    }
+    prevValidationState.current = isStep1Completed
+    
+    // Step 2: Door
+    const isStep2Completed = !!address.doorPosition
+    if (isStep2Completed && !prevDoorState.current) {
+      newJustCompleted.add(2)
+    }
+    prevDoorState.current = isStep2Completed
+    
+    // Step 3: Scenarios
+    const isStep3Completed = address.scenarioPaths ? SCENARIOS.every(s => address.scenarioPaths?.[s]) : false
+    if (isStep3Completed && !prevScenariosState.current) {
+      newJustCompleted.add(3)
+    }
+    prevScenariosState.current = isStep3Completed
+    
+    // Step 4: Parking
+    const isStep4Completed = !!address.parkingSpotSet
+    if (isStep4Completed && !prevParkingState.current) {
+      newJustCompleted.add(4)
+    }
+    prevParkingState.current = isStep4Completed
+    
+    // Update completion states
+    const allCompleted = new Set<number>()
+    if (isStep1Completed) allCompleted.add(1)
+    if (isStep2Completed) allCompleted.add(2)
+    if (isStep3Completed) allCompleted.add(3)
+    if (isStep4Completed) allCompleted.add(4)
+    setCompletedSteps(allCompleted)
+    
+    // Trigger animation for newly completed steps
+    if (newJustCompleted.size > 0) {
+      setJustCompleted(newJustCompleted)
+      // Clear animation state after animation completes
+      setTimeout(() => {
+        setJustCompleted(new Set())
+      }, 2000) // Animation duration
+    }
+  }, [address])
+  
   // Auto-scroll to step 3 when door is placed
   useEffect(() => {
     if (address.doorPosition && !prevDoorPosition.current && step3Ref.current) {
@@ -229,10 +287,24 @@ function WizardView({
       {/* Wizard Steps - Scrollable Section */}
       <div className="flex-1 overflow-y-scroll overflow-x-hidden p-2 flex flex-col gap-2 min-h-0" style={{ scrollbarWidth: 'thin', scrollbarColor: '#c1c1c1 #f1f1f1' }}>
         {/* Validation Step */}
-        <div className={`p-3 bg-white/90 backdrop-blur-md rounded-2xl border border-slate-200/60 shadow-[0_2px_8px_rgba(0,0,0,0.04)] hover:shadow-[0_4px_12px_rgba(0,0,0,0.08)] flex flex-col relative transition-all duration-300 hover:border-slate-300/60 ${!validationEnabled ? 'opacity-60' : 'hover:scale-[1.01]'}`}>
+        <div className={`p-3 bg-white/90 backdrop-blur-md rounded-2xl border transition-all duration-500 flex flex-col relative hover:shadow-[0_4px_12px_rgba(0,0,0,0.08)] ${
+          !validationEnabled ? 'opacity-60' : 'hover:scale-[1.01]'
+        } ${
+          justCompleted.has(1) 
+            ? 'border-emerald-400/80 shadow-[0_0_0_4px_rgba(16,185,129,0.2),0_4px_20px_rgba(16,185,129,0.3)] bg-gradient-to-br from-emerald-50/50 to-white/90 scale-[1.02]' 
+            : isStepCompleted(1)
+            ? 'border-emerald-200/60 shadow-[0_2px_8px_rgba(0,0,0,0.04)]'
+            : 'border-slate-200/60 shadow-[0_2px_8px_rgba(0,0,0,0.04)]'
+        } hover:border-slate-300/60`}>
           {isStepCompleted(1) && (
-            <div className="absolute top-2 right-2 w-5 h-5 bg-gradient-to-br from-emerald-500 via-green-500 to-teal-600 rounded-full flex items-center justify-center shadow-[0_2px_6px_rgba(16,185,129,0.4)] ring-2 ring-emerald-100/50">
-              <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className={`absolute top-2 right-2 w-6 h-6 bg-gradient-to-br from-emerald-500 via-green-500 to-teal-600 rounded-full flex items-center justify-center shadow-[0_2px_6px_rgba(16,185,129,0.4)] ring-2 ring-emerald-100/50 transition-all duration-500 ${
+              justCompleted.has(1)
+                ? 'animate-[bounce_0.6s_ease-out,scale_0.8s_ease-out] scale-125 ring-4 ring-emerald-200/60'
+                : 'scale-100'
+            }`}>
+              <svg className={`w-4 h-4 text-white transition-all duration-300 ${
+                justCompleted.has(1) ? 'animate-[checkmark_0.5s_ease-out_0.2s_both]' : ''
+              }`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
               </svg>
             </div>
@@ -264,7 +336,15 @@ function WizardView({
 
         {/* Place Door Step */}
         <div 
-          className={`p-3 bg-white/90 backdrop-blur-md rounded-2xl border border-slate-200/60 shadow-[0_2px_8px_rgba(0,0,0,0.04)] hover:shadow-[0_4px_12px_rgba(0,0,0,0.08)] flex flex-col relative transition-all duration-300 hover:border-slate-300/60 ${!doorEnabled ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer hover:scale-[1.01]'}`}
+          className={`p-3 bg-white/90 backdrop-blur-md rounded-2xl border transition-all duration-500 flex flex-col relative hover:shadow-[0_4px_12px_rgba(0,0,0,0.08)] ${
+            !doorEnabled ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer hover:scale-[1.01]'
+          } ${
+            justCompleted.has(2) 
+              ? 'border-emerald-400/80 shadow-[0_0_0_4px_rgba(16,185,129,0.2),0_4px_20px_rgba(16,185,129,0.3)] bg-gradient-to-br from-emerald-50/50 to-white/90 scale-[1.02]' 
+              : isStepCompleted(2)
+              ? 'border-emerald-200/60 shadow-[0_2px_8px_rgba(0,0,0,0.04)]'
+              : 'border-slate-200/60 shadow-[0_2px_8px_rgba(0,0,0,0.04)]'
+          } hover:border-slate-300/60`}
           onClick={() => {
             if (doorEnabled && onEditDoorChange) {
               onEditDoorChange(!isEditingDoor)
@@ -272,8 +352,14 @@ function WizardView({
           }}
         >
           {isStepCompleted(2) && (
-            <div className="absolute top-2 right-2 w-5 h-5 bg-gradient-to-br from-emerald-500 via-green-500 to-teal-600 rounded-full flex items-center justify-center shadow-[0_2px_6px_rgba(16,185,129,0.4)] ring-2 ring-emerald-100/50">
-              <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className={`absolute top-2 right-2 w-6 h-6 bg-gradient-to-br from-emerald-500 via-green-500 to-teal-600 rounded-full flex items-center justify-center shadow-[0_2px_6px_rgba(16,185,129,0.4)] ring-2 ring-emerald-100/50 transition-all duration-500 ${
+              justCompleted.has(2)
+                ? 'animate-[bounce_0.6s_ease-out,scale_0.8s_ease-out] scale-125 ring-4 ring-emerald-200/60'
+                : 'scale-100'
+            }`}>
+              <svg className={`w-4 h-4 text-white transition-all duration-300 ${
+                justCompleted.has(2) ? 'animate-[checkmark_0.5s_ease-out_0.2s_both]' : ''
+              }`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
               </svg>
             </div>
@@ -301,10 +387,24 @@ function WizardView({
         </div>
 
         {/* Scenarios Step */}
-        <div ref={step3Ref} className={`p-3 bg-white/90 backdrop-blur-md rounded-2xl border border-slate-200/60 shadow-[0_2px_8px_rgba(0,0,0,0.04)] hover:shadow-[0_4px_12px_rgba(0,0,0,0.08)] flex flex-col relative transition-all duration-300 hover:border-slate-300/60 ${!scenariosEnabled ? 'opacity-60' : 'hover:scale-[1.01]'}`}>
+        <div ref={step3Ref} className={`p-3 bg-white/90 backdrop-blur-md rounded-2xl border transition-all duration-500 flex flex-col relative hover:shadow-[0_4px_12px_rgba(0,0,0,0.08)] ${
+          !scenariosEnabled ? 'opacity-60' : 'hover:scale-[1.01]'
+        } ${
+          justCompleted.has(3) 
+            ? 'border-emerald-400/80 shadow-[0_0_0_4px_rgba(16,185,129,0.2),0_4px_20px_rgba(16,185,129,0.3)] bg-gradient-to-br from-emerald-50/50 to-white/90 scale-[1.02]' 
+            : isStepCompleted(3)
+            ? 'border-emerald-200/60 shadow-[0_2px_8px_rgba(0,0,0,0.04)]'
+            : 'border-slate-200/60 shadow-[0_2px_8px_rgba(0,0,0,0.04)]'
+        } hover:border-slate-300/60`}>
           {isStepCompleted(3) && (
-            <div className="absolute top-2 right-2 w-5 h-5 bg-gradient-to-br from-emerald-500 via-green-500 to-teal-600 rounded-full flex items-center justify-center shadow-[0_2px_6px_rgba(16,185,129,0.4)] ring-2 ring-emerald-100/50">
-              <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className={`absolute top-2 right-2 w-6 h-6 bg-gradient-to-br from-emerald-500 via-green-500 to-teal-600 rounded-full flex items-center justify-center shadow-[0_2px_6px_rgba(16,185,129,0.4)] ring-2 ring-emerald-100/50 transition-all duration-500 ${
+              justCompleted.has(3)
+                ? 'animate-[bounce_0.6s_ease-out,scale_0.8s_ease-out] scale-125 ring-4 ring-emerald-200/60'
+                : 'scale-100'
+            }`}>
+              <svg className={`w-4 h-4 text-white transition-all duration-300 ${
+                justCompleted.has(3) ? 'animate-[checkmark_0.5s_ease-out_0.2s_both]' : ''
+              }`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
               </svg>
             </div>
@@ -356,10 +456,24 @@ function WizardView({
         </div>
 
         {/* Parking Spot Step */}
-        <div className={`p-3 bg-white/90 backdrop-blur-md rounded-2xl border border-slate-200/60 shadow-[0_2px_8px_rgba(0,0,0,0.04)] hover:shadow-[0_4px_12px_rgba(0,0,0,0.08)] flex flex-col relative transition-all duration-300 hover:border-slate-300/60 ${!parkingEnabled ? 'opacity-60' : 'hover:scale-[1.01]'}`}>
+        <div className={`p-3 bg-white/90 backdrop-blur-md rounded-2xl border transition-all duration-500 flex flex-col relative hover:shadow-[0_4px_12px_rgba(0,0,0,0.08)] ${
+          !parkingEnabled ? 'opacity-60' : 'hover:scale-[1.01]'
+        } ${
+          justCompleted.has(4) 
+            ? 'border-emerald-400/80 shadow-[0_0_0_4px_rgba(16,185,129,0.2),0_4px_20px_rgba(16,185,129,0.3)] bg-gradient-to-br from-emerald-50/50 to-white/90 scale-[1.02]' 
+            : isStepCompleted(4)
+            ? 'border-emerald-200/60 shadow-[0_2px_8px_rgba(0,0,0,0.04)]'
+            : 'border-slate-200/60 shadow-[0_2px_8px_rgba(0,0,0,0.04)]'
+        } hover:border-slate-300/60`}>
           {isStepCompleted(4) && (
-            <div className="absolute top-2 right-2 w-5 h-5 bg-gradient-to-br from-emerald-500 via-green-500 to-teal-600 rounded-full flex items-center justify-center shadow-[0_2px_6px_rgba(16,185,129,0.4)] ring-2 ring-emerald-100/50">
-              <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className={`absolute top-2 right-2 w-6 h-6 bg-gradient-to-br from-emerald-500 via-green-500 to-teal-600 rounded-full flex items-center justify-center shadow-[0_2px_6px_rgba(16,185,129,0.4)] ring-2 ring-emerald-100/50 transition-all duration-500 ${
+              justCompleted.has(4)
+                ? 'animate-[bounce_0.6s_ease-out,scale_0.8s_ease-out] scale-125 ring-4 ring-emerald-200/60'
+                : 'scale-100'
+            }`}>
+              <svg className={`w-4 h-4 text-white transition-all duration-300 ${
+                justCompleted.has(4) ? 'animate-[checkmark_0.5s_ease-out_0.2s_both]' : ''
+              }`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
               </svg>
             </div>
