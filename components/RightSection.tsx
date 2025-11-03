@@ -34,6 +34,7 @@ function RightSection({
   const [pendingDoorPosition, setPendingDoorPosition] = useState<{ lat: number; lng: number; x: number; y: number } | null>(null)
   const [currentPathPoints, setCurrentPathPoints] = useState<{ lat: number; lng: number }[]>([])
   const [pendingPathConfirmation, setPendingPathConfirmation] = useState<{ x: number; y: number } | null>(null)
+  const [lastPathClickPosition, setLastPathClickPosition] = useState<{ x: number; y: number } | null>(null)
 
   // Check if we should show door icon (only when Placing Door step is active or editing door)
   const shouldShowDoor =
@@ -82,9 +83,9 @@ function RightSection({
       
       setCurrentPathPoints(newPoints)
       
-      // Show confirmation UI on first click
-      if (currentPathPoints.length === 0) {
-        setPendingPathConfirmation({ x: window.innerWidth / 2, y: window.innerHeight / 2 })
+      // Store the last click position for showing confirmation UI
+      if (mousePosition) {
+        setLastPathClickPosition(mousePosition)
       }
       
       setMousePosition(null)
@@ -123,25 +124,25 @@ function RightSection({
   }, [])
 
   const handleShowFinishConfirmation = useCallback(() => {
-    // Show confirmation UI when user clicks Finish Path button
-    setPendingPathConfirmation({ x: window.innerWidth / 2, y: window.innerHeight / 2 })
-  }, [])
+    // Show confirmation UI at the last clicked position (or center if no position stored)
+    setPendingPathConfirmation(lastPathClickPosition || { x: window.innerWidth / 2, y: window.innerHeight / 2 })
+  }, [lastPathClickPosition])
 
   const handleConfirmFinishPath = useCallback(() => {
     if (!selectedAddressId || !activeScenario || currentPathPoints.length === 0) return
     
-    // Add the current path to the scenario's paths
-    const existingPaths = selectedAddress?.scenarioPaths?.[activeScenario] || []
+    // Save the current path to the scenario
     onUpdateAddress(selectedAddressId, {
       scenarioPaths: {
         ...selectedAddress?.scenarioPaths,
-        [activeScenario]: [...existingPaths, { points: currentPathPoints }]
+        [activeScenario]: { points: currentPathPoints }
       }
     })
     
     // Clear current path and hide confirmation UI
     setCurrentPathPoints([])
     setPendingPathConfirmation(null)
+    setLastPathClickPosition(null)
   }, [selectedAddressId, activeScenario, currentPathPoints, selectedAddress, onUpdateAddress])
 
   const handleCancelFinishPath = useCallback(() => {
@@ -151,10 +152,11 @@ function RightSection({
         // Only door position and first click, clear everything and hide UI
         setCurrentPathPoints([])
         setPendingPathConfirmation(null)
+        setLastPathClickPosition(null)
       } else if (currentPathPoints.length > 2) {
         // Remove just the last clicked point (keep door position and previous points)
         setCurrentPathPoints(currentPathPoints.slice(0, -1))
-        // Keep UI visible for further editing
+        setPendingPathConfirmation(null)
       }
     }
   }, [currentPathPoints])

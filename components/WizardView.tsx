@@ -18,7 +18,7 @@ interface WizardViewProps {
 }
 
 const CATEGORIES: Category[] = ['Validation', 'Placing Door', 'Scenarios', 'Parking Spot']
-const SCENARIOS: ScenarioType[] = ['taxi', 'car/truck', 'bicycle', 'ambulance']
+const SCENARIOS: ScenarioType[] = ['Door to taxi', 'car/truck to Door', 'bicycle to Door', 'ambulance to Door']
 
 function WizardView({
   address,
@@ -125,7 +125,7 @@ function WizardView({
     // Step 3 is active if door is placed and scenarios are being worked on or not all scenarios have paths
     if (address.doorPosition) {
       const scenarioPaths = address.scenarioPaths || {}
-      const hasAllPaths = SCENARIOS.every(s => scenarioPaths[s] && scenarioPaths[s].length > 0)
+      const hasAllPaths = SCENARIOS.every(s => scenarioPaths[s])
       // Active if currently drawing a path OR not all scenarios have paths yet
       if (activeScenario || !hasAllPaths) {
         return 3
@@ -134,7 +134,7 @@ function WizardView({
     // Step 4 is active if all scenarios have paths but parking spot is not set
     if (address.scenarioPaths) {
       const scenarioPaths = address.scenarioPaths
-      const hasAllPaths = SCENARIOS.every(s => scenarioPaths[s] && scenarioPaths[s].length > 0)
+      const hasAllPaths = SCENARIOS.every(s => scenarioPaths[s])
       if (hasAllPaths && !address.parkingSpotSet) {
         return 4
       }
@@ -151,7 +151,7 @@ function WizardView({
         return !!address.doorPosition
       case 3: // Scenarios - all scenarios have paths
         if (!address.scenarioPaths) return false
-        return SCENARIOS.every(s => address.scenarioPaths?.[s] && address.scenarioPaths?.[s].length > 0)
+        return SCENARIOS.every(s => address.scenarioPaths?.[s])
       case 4: // Parking Spot
         return !!address.parkingSpotSet
       default:
@@ -298,7 +298,7 @@ function WizardView({
           <label className="block text-sm mb-1 text-gray-600">There are 4 scenarios, each reprents a path.</label>
           <div className="flex flex-col gap-2 flex-1">
             {SCENARIOS.map((scenario) => {
-              const hasPath = address.scenarioPaths?.[scenario] && address.scenarioPaths?.[scenario].length > 0
+              const hasPath = !!address.scenarioPaths?.[scenario]
               const stepEnabled = isCategoryEnabled('Scenarios')
               const isActive = activeScenario === scenario
 

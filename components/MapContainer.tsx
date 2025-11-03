@@ -13,6 +13,8 @@ interface MapContainerProps {
   addressCoordinates?: { lat: number; lng: number } | null
   currentPathPoints?: { lat: number; lng: number }[]
   activeScenario?: ScenarioType | null
+  isEditingDoor?: boolean
+  onDoorDragEnd?: (lat: number, lng: number) => void
 }
 
 // Fix for default marker icon issue
@@ -52,6 +54,47 @@ function MapCenterUpdater({ center }: { center: [number, number] }) {
   }, [center, map])
   
   return null
+}
+
+// Draggable door marker component
+function DraggableDoorMarker({
+  position,
+  icon,
+  onDragEnd,
+  isEditing,
+}: {
+  position: [number, number]
+  icon: L.Icon
+  onDragEnd?: (lat: number, lng: number) => void
+  isEditing?: boolean
+}) {
+  const markerRef = React.useRef<L.Marker | null>(null)
+  
+  useEffect(() => {
+    if (markerRef.current && isEditing) {
+      markerRef.current.dragging?.enable()
+    } else if (markerRef.current) {
+      markerRef.current.dragging?.disable()
+    }
+  }, [isEditing])
+  
+  return (
+    <Marker
+      position={position}
+      icon={icon}
+      draggable={isEditing}
+      eventHandlers={{
+        dragend: (e) => {
+          const marker = e.target
+          const { lat, lng } = marker.getLatLng()
+          if (onDragEnd) {
+            onDragEnd(lat, lng)
+          }
+        },
+      }}
+      ref={markerRef}
+    />
+  )
 }
 
 function getTileLayerUrl(mapType: 'outline' | 'satellite' | 'street'): string {
@@ -100,6 +143,8 @@ export default function MapContainer({
   addressCoordinates,
   currentPathPoints,
   activeScenario,
+  isEditingDoor,
+  onDoorDragEnd,
 }: MapContainerProps) {
   const defaultCenter: [number, number] = [40.7128, -74.006] // Default to New York
   const defaultZoom = 13
@@ -179,44 +224,42 @@ export default function MapContainer({
         
         {/* Confirmed door position (green) */}
         {selectedAddress?.doorPosition && !pendingDoorPosition && (
-          <Marker
+          <DraggableDoorMarker
             position={[selectedAddress.doorPosition.lat, selectedAddress.doorPosition.lng]}
             icon={doorIcon}
+            onDragEnd={onDoorDragEnd}
+            isEditing={isEditingDoor}
           />
         )}
         
         {/* Scenario paths */}
         {selectedAddress?.scenarioPaths && selectedAddress.doorPosition && !pendingDoorPosition && (
           <>
-            {Object.entries(selectedAddress.scenarioPaths).map(([scenario, paths]) => {
-              if (!paths || paths.length === 0) return null
+            {Object.entries(selectedAddress.scenarioPaths).map(([scenario, path]) => {
+              if (!path || path.points.length < 2) return null
 
               // Define colors for each scenario
               const colors: Record<string, string> = {
-                'taxi': '#FFD700',      // Gold
-                'car/truck': '#FF6B35', // Orange
-                'bicycle': '#4CAF50',   // Green
-                'ambulance': '#FF1744'  // Red
+                'Door to taxi': '#FFD700',      // Gold
+                'car/truck to Door': '#FF6B35', // Orange
+                'bicycle to Door': '#4CAF50',   // Green
+                'ambulance to Door': '#FF1744'  // Red
               }
 
-              return paths.map((path, pathIndex) => {
-                if (!path || path.points.length < 2) return null
+              // Convert points to [lat, lng] format for Polyline
+              const positions = path.points.map(p => [p.lat, p.lng] as [number, number])
 
-                // Convert points to [lat, lng] format for Polyline
-                const positions = path.points.map(p => [p.lat, p.lng] as [number, number])
-
-                return (
-                  <Polyline
-                    key={`${scenario}-${pathIndex}`}
-                    positions={positions}
-                    pathOptions={{
-                      color: colors[scenario] || '#3498db',
-                      weight: 4,
-                      opacity: 0.8,
-                    }}
-                  />
-                )
-              })
+              return (
+                <Polyline
+                  key={scenario}
+                  positions={positions}
+                  pathOptions={{
+                    color: colors[scenario] || '#3498db',
+                    weight: 4,
+                    opacity: 0.8,
+                  }}
+                />
+              )
             })}
           </>
         )}
@@ -226,10 +269,10 @@ export default function MapContainer({
           <>
             {(() => {
               const colors: Record<string, string> = {
-                'taxi': '#FFD700',
-                'car/truck': '#FF6B35',
-                'bicycle': '#4CAF50',
-                'ambulance': '#FF1744'
+                'Door to taxi': '#FFD700',
+                'car/truck to Door': '#FF6B35',
+                'bicycle to Door': '#4CAF50',
+                'ambulance to Door': '#FF1744'
               }
 
               const positions = currentPathPoints.map(p => [p.lat, p.lng] as [number, number])

@@ -30,7 +30,7 @@ const initialAddresses: Address[] = [
     givenAddress: '789 Pine Rd, Chicago, IL 60601',
     validatedAddress: '789 Pine Road, Chicago, IL 60601',
     wizardStatus: 'completed',
-    selectedScenarios: ['taxi', 'car/truck'],
+    selectedScenarios: ['Door to taxi', 'car/truck to Door'],
   },
   {
     id: '4',

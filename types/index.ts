@@ -2,7 +2,7 @@ export type WizardStatus = 'not-started' | 'in-progress' | 'completed'
 
 export type Category = 'Validation' | 'Placing Door' | 'Scenarios' | 'Parking Spot'
 
-export type ScenarioType = 'taxi' | 'car/truck' | 'bicycle' | 'ambulance'
+export type ScenarioType = 'Door to taxi' | 'car/truck to Door' | 'bicycle to Door' | 'ambulance to Door'
 
 export interface ScenarioPath {
   points: { lat: number; lng: number }[] // Array of points starting from door
@@ -20,7 +20,7 @@ export interface Address {
   selectedScenarios: ScenarioType[]
   parkingSpotSet?: boolean
   pendingDoorPosition?: { lat: number; lng: number }
-  scenarioPaths?: Partial<Record<ScenarioType, ScenarioPath[]>> // Multiple paths for each scenario
+  scenarioPaths?: Partial<Record<ScenarioType, ScenarioPath>> // Single path for each scenario
 }
 
 export interface WizardStep {
