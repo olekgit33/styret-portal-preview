@@ -281,7 +281,7 @@ function WizardView({
 
       {/* Overall Address Progress Bar */}
       <div className="flex-shrink-0">
-        <ProgressBar completedCount={completedCount} totalCount={totalAddresses} />
+        <ProgressBar completedCount={completedCount} totalCount={totalAddresses}/>
       </div>
 
       {/* Wizard Steps - Scrollable Section */}
@@ -415,7 +415,28 @@ function WizardView({
             )}
             <span className="bg-gradient-to-r from-slate-800 to-slate-700 bg-clip-text text-transparent">Step 3. Draw Path</span>
           </div>
-          <label className="block text-xs mb-2 text-slate-600 font-medium leading-relaxed">There are 4 scenarios, each represents a path.</label>
+          <div className="flex items-center justify-between mb-2">
+            <label className="block text-xs text-slate-600 font-medium leading-relaxed">There are 4 scenarios, each represents a path.</label>
+            {(() => {
+              const completedScenarios = SCENARIOS.filter(s => !!address.scenarioPaths?.[s]).length
+              const totalScenarios = SCENARIOS.length
+              return (
+                <div className="flex items-center gap-2">
+                  <div className="text-[10px] text-slate-600 font-bold">
+                    {completedScenarios}/{totalScenarios}
+                  </div>
+                  <div className="w-24 h-1.5 bg-slate-200/70 rounded-full overflow-hidden shadow-[inset_0_2px_4px_rgba(0,0,0,0.06)]">
+                    <div
+                      className="h-full bg-gradient-to-r from-emerald-500 via-green-500 to-teal-600 transition-all duration-500 ease-out shadow-[0_2px_4px_rgba(16,185,129,0.3)] relative overflow-hidden"
+                      style={{ width: `${(completedScenarios / totalScenarios) * 100}%` }}
+                    >
+                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-pulse" />
+                    </div>
+                  </div>
+                </div>
+              )
+            })()}
+          </div>
           <div className="flex flex-col gap-2 flex-1">
             {SCENARIOS.map((scenario) => {
               const hasPath = !!address.scenarioPaths?.[scenario]
