@@ -268,12 +268,17 @@ function WizardView({
       </div>
 
       {/* Wizard Steps - Scrollable Section */}
-      <div className="flex-1 overflow-y-scroll overflow-x-hidden p-2 flex flex-col gap-2 min-h-0" style={{ scrollbarWidth: 'thin', scrollbarColor: '#c1c1c1 #f1f1f1' }}>
+      <div className="flex-1 overflow-y-auto overflow-x-hidden p-2 flex flex-col gap-2 min-h-0 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
         {/* Place Door Step */}
         <div 
           ref={step1Ref}
+          onClick={() => {
+            if (doorEnabled && !isStepCompleted(1) && onEditDoorChange) {
+              onEditDoorChange(true)
+            }
+          }}
           className={`p-3 bg-white/90 backdrop-blur-md rounded-2xl border transition-all duration-500 flex flex-col relative ${
-            !doorEnabled ? 'opacity-60' : ''
+            !doorEnabled ? 'opacity-60' : 'cursor-pointer'
           } ${
             justCompleted.has(1) 
               ? 'border-emerald-400/80 shadow-[0_0_0_4px_rgba(16,185,129,0.2),0_4px_20px_rgba(16,185,129,0.3)] bg-gradient-to-br from-emerald-50/50 to-white/90 scale-[1.02]' 
@@ -324,9 +329,16 @@ function WizardView({
         </div>
 
         {/* Scenarios Step */}
-        <div ref={step2Ref} className={`p-3 bg-white/90 backdrop-blur-md rounded-2xl border transition-all duration-500 flex flex-col relative hover:shadow-[0_4px_12px_rgba(0,0,0,0.08)] ${
-          !scenariosEnabled ? 'opacity-60' : 'hover:scale-[1.01] cursor-pointer'
-        } ${
+        <div 
+          ref={step2Ref}
+          onClick={() => {
+            if (scenariosEnabled) {
+              scrollToStep(2)
+            }
+          }}
+          className={`p-3 bg-white/90 backdrop-blur-md rounded-2xl border transition-all duration-500 flex flex-col relative hover:shadow-[0_4px_12px_rgba(0,0,0,0.08)] ${
+            !scenariosEnabled ? 'opacity-60' : 'hover:scale-[1.01] cursor-pointer'
+          } ${
           justCompleted.has(2) 
             ? 'border-emerald-400/80 shadow-[0_0_0_4px_rgba(16,185,129,0.2),0_4px_20px_rgba(16,185,129,0.3)] bg-gradient-to-br from-emerald-50/50 to-white/90 scale-[1.02]' 
             : isStepCompleted(2)
@@ -420,9 +432,16 @@ function WizardView({
         </div>
 
         {/* Parking Spot Step */}
-        <div ref={step3Ref} className={`p-3 bg-white/90 backdrop-blur-md rounded-2xl border transition-all duration-500 flex flex-col relative hover:shadow-[0_4px_12px_rgba(0,0,0,0.08)] ${
-          !parkingEnabled ? 'opacity-60' : 'hover:scale-[1.01] cursor-pointer'
-        } ${
+        <div 
+          ref={step3Ref}
+          onClick={() => {
+            if (parkingEnabled) {
+              scrollToStep(3)
+            }
+          }}
+          className={`p-3 bg-white/90 backdrop-blur-md rounded-2xl border transition-all duration-500 flex flex-col relative hover:shadow-[0_4px_12px_rgba(0,0,0,0.08)] ${
+            !parkingEnabled ? 'opacity-60' : 'hover:scale-[1.01] cursor-pointer'
+          } ${
           justCompleted.has(3) 
             ? 'border-emerald-400/80 shadow-[0_0_0_4px_rgba(16,185,129,0.2),0_4px_20px_rgba(16,185,129,0.3)] bg-gradient-to-br from-emerald-50/50 to-white/90 scale-[1.02]' 
             : isStepCompleted(3)

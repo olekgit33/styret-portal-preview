@@ -3,8 +3,6 @@
 import { useState, useMemo, useCallback, useEffect } from 'react'
 import LeftSection from '@/components/LeftSection'
 import RightSection from '@/components/RightSection'
-import Navbar from '@/components/Navbar'
-import Footer from '@/components/Footer'
 import { Address, ScenarioType } from '@/types'
 import { calculateWizardStatus } from '@/utils/addressUtils'
 import { geocodeAddress, getFallbackCoordinates } from '@/utils/geocoding'
@@ -167,9 +165,6 @@ export default function Home() {
 
   return (
     <div className="flex flex-col h-screen w-screen bg-gray-100">
-      {/* Navbar */}
-      <Navbar />
-      
       {/* Main Section */}
       <main className="flex-1 flex gap-4 p-4 overflow-hidden">
         <LeftSection
@@ -203,9 +198,6 @@ export default function Home() {
           onEditDoorChange={setIsEditingDoor}
         />
       </main>
-      
-      {/* Footer */}
-      <Footer />
     </div>
   )
 }
