@@ -8,7 +8,7 @@ A Next.js application for address validation and mapping with a wizard-based wor
 - **Progress Tracking**: Visual progress bars for overall completion and category progress
 - **Wizard Workflow**: Step-by-step process with 4 categories:
   - **Validation**: Select validated address from search results
-  - **Placing Door**: Interactive door placement on maps with confirmation UI
+  - **Place Door**: Interactive door placement on maps with confirmation UI
   - **Scenarios**: Select scenario types (taxi, car/truck, bicycle, ambulance)
   - **Parking Spot**: Set parking spot location
 - **Multi-Map View**: Three simultaneous map views (outline, satellite, street)
@@ -109,7 +109,7 @@ All components use Tailwind CSS utility classes for efficient and maintainable s
 
 ## Notes
 
-- The door icon cursor appears when the "Placing Door" step is active (only when mouse is over map areas)
+- The door icon cursor appears when the "Place Door" step is active (only when mouse is over map areas)
 - Maps are enabled/disabled based on wizard step completion
 - The outline map uses Mapbox Light style (requires access token) or falls back to OpenStreetMap
 - The satellite map uses Google Maps satellite imagery for high-quality aerial views

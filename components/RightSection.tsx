@@ -39,22 +39,11 @@ function RightSection({
   const [showElevatorModal, setShowElevatorModal] = useState(false)
   const [pendingDoorForElevator, setPendingDoorForElevator] = useState<{ lat: number; lng: number } | null>(null)
   
-  // Auto-place door at center when editing starts
+  // Auto-place door at center when editing an existing door (not when placing for the first time)
   useEffect(() => {
     if (isEditingDoor && selectedAddress && !pendingDoorPosition) {
-      // If door doesn't exist yet, place it at center. If it exists, allow re-positioning
-      if (!selectedAddress.doorPosition) {
-        // Use address coordinates (map center) or default
-        const centerLat = addressCoordinates?.lat || (selectedAddress.coordinates?.lat) || 40.7128
-        const centerLng = addressCoordinates?.lng || (selectedAddress.coordinates?.lng) || -74.006
-        
-        // Calculate screen position (will be updated once map is ready)
-        // For now, use center of screen as approximation
-        const screenX = window.innerWidth * 0.15 // Left map is 1/3 of screen, so center is ~15% from left
-        const screenY = window.innerHeight * 0.5 // Center vertically
-        
-        setPendingDoorPosition({ lat: centerLat, lng: centerLng, x: screenX, y: screenY })
-      } else if (selectedAddress.doorPosition && !pendingDoorPosition) {
+      // Only auto-place if door already exists (editing mode), not when placing for the first time
+      if (selectedAddress.doorPosition && !pendingDoorPosition) {
         // Door exists, start editing by showing it as pending (convert confirmed to pending)
         const screenX = window.innerWidth * 0.15
         const screenY = window.innerHeight * 0.5
@@ -65,13 +54,13 @@ function RightSection({
           y: screenY,
         })
       }
+      // If door doesn't exist yet, don't auto-place - let user click on map to place it
     }
   }, [isEditingDoor, selectedAddress, addressCoordinates, pendingDoorPosition])
 
-  // Check if we should show door icon (only when Placing Door step is active or editing door)
+  // Check if we should show door icon (only when Place Door step is active or editing door)
   const shouldShowDoor =
     selectedAddress &&
-    (selectedAddress.validatedAddress || selectedAddress.selectedAddress) &&
     ((!selectedAddress.doorPosition || isEditingDoor) && !pendingDoorPosition && !pendingPathConfirmation) &&
     isMouseOverMap
 
@@ -87,7 +76,6 @@ function RightSection({
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
     // Update mouse position for door placement or path drawing
     if (selectedAddress &&
-      (selectedAddress.validatedAddress || selectedAddress.selectedAddress) &&
       ((!selectedAddress.doorPosition || isEditingDoor || activeScenario) && !pendingDoorPosition)) {
       setMousePosition({ x: e.clientX, y: e.clientY })
     }
@@ -98,7 +86,6 @@ function RightSection({
 
     // Handle door placement - show confirmation UI (either first time or when editing)
     if (
-      (selectedAddress.validatedAddress || selectedAddress.selectedAddress) &&
       ((!selectedAddress.doorPosition || isEditingDoor) && !pendingDoorPosition && !activeScenario)
     ) {
       setPendingDoorPosition({ lat, lng, x: mousePosition?.x || window.innerWidth / 2, y: mousePosition?.y || window.innerHeight / 2 })

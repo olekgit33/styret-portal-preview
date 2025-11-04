@@ -1,6 +1,6 @@
 export type WizardStatus = 'not-started' | 'in-progress' | 'completed'
 
-export type Category = 'Validation' | 'Placing Door' | 'Scenarios' | 'Parking Spot'
+export type Category = 'Validation' | 'Place Door' | 'Scenarios' | 'Parking Spot'
 
 export type ScenarioType = 'Door to taxi' | 'car/truck to Door' | 'bicycle to Door' | 'ambulance to Door'
 

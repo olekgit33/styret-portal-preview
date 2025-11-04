@@ -17,7 +17,7 @@ interface WizardViewProps {
   onEditDoorChange?: (isEditing: boolean) => void
 }
 
-const CATEGORIES: Category[] = ['Validation', 'Placing Door', 'Scenarios', 'Parking Spot']
+const CATEGORIES: Category[] = ['Place Door', 'Scenarios', 'Parking Spot']
 const SCENARIOS: ScenarioType[] = ['Door to taxi', 'car/truck to Door', 'bicycle to Door', 'ambulance to Door']
 
 function WizardView({
@@ -32,18 +32,14 @@ function WizardView({
   isEditingDoor,
   onEditDoorChange,
 }: WizardViewProps) {
-  const [searchQuery, setSearchQuery] = useState('')
-  const [isSelectFocused, setIsSelectFocused] = useState(false)
   const step1Ref = useRef<HTMLDivElement>(null)
   const step2Ref = useRef<HTMLDivElement>(null)
   const step3Ref = useRef<HTMLDivElement>(null)
-  const step4Ref = useRef<HTMLDivElement>(null)
   const prevDoorPosition = useRef<{ lat: number; lng: number } | undefined>(address.doorPosition)
   
   // Track completion states to detect when steps become completed
   const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set())
   const [justCompleted, setJustCompleted] = useState<Set<number>>(new Set())
-  const prevValidationState = useRef<boolean>(!!(address.validatedAddress || address.selectedAddress))
   const prevDoorState = useRef<boolean>(!!address.doorPosition)
   const prevScenariosState = useRef<boolean>(address.scenarioPaths ? SCENARIOS.every(s => address.scenarioPaths?.[s]) : false)
   const prevParkingState = useRef<boolean>(!!address.parkingSpotSet)
@@ -53,13 +49,8 @@ function WizardView({
     // Find the highest completed step number
     const maxCompleted = Math.max(...Array.from(justCompleted))
     
-    // Skip step 2 (it's display-only), go directly to step 3 after step 1
-    if (maxCompleted === 1) {
-      return 3 // Skip step 2, go to step 3
-    }
-    
     // Return next step if exists
-    if (maxCompleted < 4) {
+    if (maxCompleted < 3) {
       return maxCompleted + 1
     }
     return null
@@ -67,7 +58,7 @@ function WizardView({
   
   // Function to scroll to a specific step
   const scrollToStep = useCallback((stepNumber: number) => {
-    const stepRefs = [step1Ref, step2Ref, step3Ref, step4Ref]
+    const stepRefs = [step1Ref, step2Ref, step3Ref]
     const ref = stepRefs[stepNumber - 1]
     
     if (ref?.current) {
@@ -83,40 +74,32 @@ function WizardView({
   useEffect(() => {
     const newJustCompleted = new Set<number>()
     
-    // Step 1: Validation
-    const isStep1Completed = !!(address.validatedAddress || address.selectedAddress)
-    if (isStep1Completed && !prevValidationState.current) {
+    // Step 1: Door
+    const isStep1Completed = !!address.doorPosition
+    if (isStep1Completed && !prevDoorState.current) {
       newJustCompleted.add(1)
     }
-    prevValidationState.current = isStep1Completed
+    prevDoorState.current = isStep1Completed
     
-    // Step 2: Door
-    const isStep2Completed = !!address.doorPosition
-    if (isStep2Completed && !prevDoorState.current) {
+    // Step 2: Scenarios
+    const isStep2Completed = address.scenarioPaths ? SCENARIOS.every(s => address.scenarioPaths?.[s]) : false
+    if (isStep2Completed && !prevScenariosState.current) {
       newJustCompleted.add(2)
     }
-    prevDoorState.current = isStep2Completed
+    prevScenariosState.current = isStep2Completed
     
-    // Step 3: Scenarios
-    const isStep3Completed = address.scenarioPaths ? SCENARIOS.every(s => address.scenarioPaths?.[s]) : false
-    if (isStep3Completed && !prevScenariosState.current) {
+    // Step 3: Parking
+    const isStep3Completed = !!address.parkingSpotSet
+    if (isStep3Completed && !prevParkingState.current) {
       newJustCompleted.add(3)
     }
-    prevScenariosState.current = isStep3Completed
-    
-    // Step 4: Parking
-    const isStep4Completed = !!address.parkingSpotSet
-    if (isStep4Completed && !prevParkingState.current) {
-      newJustCompleted.add(4)
-    }
-    prevParkingState.current = isStep4Completed
+    prevParkingState.current = isStep3Completed
     
     // Update completion states
     const allCompleted = new Set<number>()
     if (isStep1Completed) allCompleted.add(1)
     if (isStep2Completed) allCompleted.add(2)
     if (isStep3Completed) allCompleted.add(3)
-    if (isStep4Completed) allCompleted.add(4)
     setCompletedSteps(allCompleted)
     
     // Trigger animation for newly completed steps
@@ -129,34 +112,34 @@ function WizardView({
       
       // Auto-scroll logic
       setTimeout(() => {
-        const maxCompleted = Math.max(...Array.from(newJustCompleted))
-        
-        // If step 1 just completed, first scroll to step 2 to show active icon
-        // then continue to step 3
-        if (maxCompleted === 1) {
-          // Scroll to step 2 first to show the play icon
-          scrollToStep(2)
-          // Then after a brief pause, scroll to step 3
-          setTimeout(() => {
-            scrollToStep(3)
-          }, 1000)
-        } else {
-          // For other steps, use normal next step logic
-          const nextStep = getNextStep(newJustCompleted)
-          if (nextStep) {
-            scrollToStep(nextStep)
-          }
+        const nextStep = getNextStep(newJustCompleted)
+        if (nextStep) {
+          scrollToStep(nextStep)
         }
       }, 800) // Delay before scrolling to next step
     }
   }, [address, getNextStep, scrollToStep])
   
-  // Auto-scroll to step 3 when door is placed
+  // Auto-enable door editing when Step 1 is active (no door placed yet)
   useEffect(() => {
-    if (address.doorPosition && !prevDoorPosition.current && step3Ref.current) {
-      // Door was just placed, scroll to step 3
+    // Step 1 is active if door is not placed yet
+    const isStep1Active = !address.doorPosition
+    
+    if (isStep1Active && !address.doorPosition && onEditDoorChange && !isEditingDoor) {
+      // Step 1 is active and no door is placed, enable door editing mode
+      onEditDoorChange(true)
+    } else if (!isStep1Active && isEditingDoor && onEditDoorChange && address.doorPosition) {
+      // Step 1 is no longer active and door is placed, disable door editing mode
+      onEditDoorChange(false)
+    }
+  }, [address.doorPosition, isEditingDoor, onEditDoorChange])
+
+  // Auto-scroll to step 2 when door is placed
+  useEffect(() => {
+    if (address.doorPosition && !prevDoorPosition.current && step2Ref.current) {
+      // Door was just placed, scroll to step 2 (scenarios)
       setTimeout(() => {
-        step3Ref.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+        step2Ref.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
       }, 100)
     }
     prevDoorPosition.current = address.doorPosition
@@ -165,12 +148,6 @@ function WizardView({
   // Calculate category completion
   const categoryProgress = useMemo(() => {
     let completed = 0
-    
-    if (address.validatedAddress || address.selectedAddress) {
-      completed++
-    } else {
-      return { completed, total: CATEGORIES.length }
-    }
     
     if (address.doorPosition) {
       completed++
@@ -196,32 +173,17 @@ function WizardView({
   // Determine which categories are enabled
   const isCategoryEnabled = useCallback((category: Category): boolean => {
     switch (category) {
-      case 'Validation':
+      case 'Place Door':
         return true
-      case 'Placing Door':
-        return !!(address.validatedAddress || address.selectedAddress)
       case 'Scenarios':
         return !!address.doorPosition
       case 'Parking Spot':
-        return !!(address.selectedScenarios && address.selectedScenarios.length > 0)
+        const hasAllScenarioPaths = address.scenarioPaths ? SCENARIOS.every(s => address.scenarioPaths?.[s]) : false
+        return hasAllScenarioPaths
       default:
         return false
     }
   }, [address])
-
-  // Sample addresses for validation dropdown
-  const searchAddresses = useMemo(() => {
-    const baseAddresses = [
-      address.givenAddress,
-      address.validatedAddress || '',
-      `${address.givenAddress.split(',')[0]} Street, ${address.givenAddress.split(',')[1]?.trim() || ''}`,
-      `${address.givenAddress.split(',')[0]} Avenue, ${address.givenAddress.split(',')[1]?.trim() || ''}`,
-    ].filter(Boolean)
-
-    if (!searchQuery.trim()) return baseAddresses
-    const query = searchQuery.toLowerCase()
-    return baseAddresses.filter((addr) => addr.toLowerCase().includes(query))
-  }, [address, searchQuery])
 
   const handleScenarioToggle = useCallback((scenario: ScenarioType) => {
     const current = address.selectedScenarios || []
@@ -231,57 +193,45 @@ function WizardView({
     onUpdate({ selectedScenarios: updated })
   }, [address.selectedScenarios, onUpdate])
 
-  const handleAddressSelect = useCallback((selected: string) => {
-    onUpdate({ selectedAddress: selected, validatedAddress: selected || undefined })
-  }, [onUpdate])
-
-  const validationEnabled = isCategoryEnabled('Validation')
-  const doorEnabled = isCategoryEnabled('Placing Door')
+  const doorEnabled = isCategoryEnabled('Place Door')
   const scenariosEnabled = isCategoryEnabled('Scenarios')
   const parkingEnabled = isCategoryEnabled('Parking Spot')
 
   // Determine which step is currently active (being worked on)
   const getActiveStep = useCallback((): number | null => {
-    // Step 1 is active if validation is not completed OR if user is interacting with the select
-    const isStep1Completed = !!(address.validatedAddress || address.selectedAddress)
-    if (!isStep1Completed || isSelectFocused) {
+    // Step 1 is active if door is not placed yet
+    if (!address.doorPosition) {
       return 1
     }
-    // Step 2 is active if step 1 is completed but door is not placed yet
-    if (isStep1Completed && !address.doorPosition) {
-      return 2
-    }
-    // Step 3 is active if door is placed and scenarios are being worked on or not all scenarios have paths
+    // Step 2 is active if door is placed and scenarios are being worked on or not all scenarios have paths
     if (address.doorPosition) {
       const scenarioPaths = address.scenarioPaths || {}
       const hasAllPaths = SCENARIOS.every(s => scenarioPaths[s])
       // Active if currently drawing a path OR not all scenarios have paths yet
       if (activeScenario || !hasAllPaths) {
-        return 3
+        return 2
       }
     }
-    // Step 4 is active if all scenarios have paths but parking spot is not set
+    // Step 3 is active if all scenarios have paths but parking spot is not set
     if (address.scenarioPaths) {
       const scenarioPaths = address.scenarioPaths
       const hasAllPaths = SCENARIOS.every(s => scenarioPaths[s])
       if (hasAllPaths && !address.parkingSpotSet) {
-        return 4
+        return 3
       }
     }
     return null
-  }, [address, activeScenario, isSelectFocused])
+  }, [address, activeScenario])
 
   // Check if a step is completed
   const isStepCompleted = useCallback((stepNumber: number): boolean => {
     switch (stepNumber) {
-      case 1: // Validation
-        return !!(address.validatedAddress || address.selectedAddress)
-      case 2: // Placing Door
+      case 1: // Place Door
         return !!address.doorPosition
-      case 3: // Scenarios - all scenarios have paths
+      case 2: // Scenarios - all scenarios have paths
         if (!address.scenarioPaths) return false
         return SCENARIOS.every(s => address.scenarioPaths?.[s])
-      case 4: // Parking Spot
+      case 3: // Parking Spot
         return !!address.parkingSpotSet
       default:
         return false
@@ -312,31 +262,6 @@ function WizardView({
         </div>
       </div>
 
-      {/* Validated Address Section - Fixed Height */}
-      <div className="flex-shrink-0 min-h-[60px] px-2.5 py-2 bg-gradient-to-r from-slate-50 via-blue-50/50 to-indigo-50/50 backdrop-blur-md border-b border-slate-200/40 shadow-[0_1px_0_0_rgba(255,255,255,0.8)] flex items-center">
-        {address.validatedAddress ? (
-          <div className="flex-1 min-w-0 flex items-center gap-3">
-            <div className="flex-shrink-0 w-6 h-6 bg-gradient-to-br from-emerald-500 via-green-500 to-teal-600 rounded-lg flex items-center justify-center shadow-[0_2px_8px_rgba(16,185,129,0.4)] ring-2 ring-emerald-100/50">
-              <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-              </svg>
-            </div>
-            <div className="flex-1 min-w-0 flex flex-col gap-1">
-              <span className="text-[10px] font-bold text-emerald-700 uppercase tracking-wider">Validated Address</span>
-              <div className="px-3 py-2 bg-gradient-to-r from-emerald-50/90 via-green-50/80 to-teal-50/70 backdrop-blur-sm rounded-xl border-2 border-emerald-300/60 shadow-[0_2px_8px_rgba(16,185,129,0.25)] ring-1 ring-emerald-100/50">
-                <span className="text-sm font-bold text-emerald-900 truncate block" title={address.validatedAddress}>
-                  {address.validatedAddress}
-                </span>
-              </div>
-            </div>
-          </div>
-        ) : (
-          <div className="flex-1 min-w-0 flex items-center justify-center">
-            <span className="text-xs text-slate-400 font-medium italic">No validated address yet</span>
-          </div>
-        )}
-      </div>
-
       {/* Category Progress Bar */}
       <div className="flex-shrink-0">
         <ProgressBar completedCount={categoryProgress.completed} totalCount={categoryProgress.total} label="Steps"/>
@@ -344,16 +269,25 @@ function WizardView({
 
       {/* Wizard Steps - Scrollable Section */}
       <div className="flex-1 overflow-y-scroll overflow-x-hidden p-2 flex flex-col gap-2 min-h-0" style={{ scrollbarWidth: 'thin', scrollbarColor: '#c1c1c1 #f1f1f1' }}>
-        {/* Validation Step */}
-        <div ref={step1Ref} className={`p-3 bg-white/90 backdrop-blur-md rounded-2xl border transition-all duration-500 flex flex-col relative hover:shadow-[0_4px_12px_rgba(0,0,0,0.08)] ${
-          !validationEnabled ? 'opacity-60' : 'hover:scale-[1.01]'
-        } ${
-          justCompleted.has(1) 
-            ? 'border-emerald-400/80 shadow-[0_0_0_4px_rgba(16,185,129,0.2),0_4px_20px_rgba(16,185,129,0.3)] bg-gradient-to-br from-emerald-50/50 to-white/90 scale-[1.02]' 
-            : isStepCompleted(1)
-            ? 'border-emerald-200/60 shadow-[0_2px_8px_rgba(0,0,0,0.04)]'
-            : 'border-slate-200/60 shadow-[0_2px_8px_rgba(0,0,0,0.04)]'
-        } hover:border-slate-300/60`}>
+        {/* Place Door Step */}
+        <div 
+          ref={step1Ref}
+          className={`p-3 bg-white/90 backdrop-blur-md rounded-2xl border transition-all duration-500 flex flex-col relative ${
+            !doorEnabled ? 'opacity-60' : ''
+          } ${
+            justCompleted.has(1) 
+              ? 'border-emerald-400/80 shadow-[0_0_0_4px_rgba(16,185,129,0.2),0_4px_20px_rgba(16,185,129,0.3)] bg-gradient-to-br from-emerald-50/50 to-white/90 scale-[1.02]' 
+              : isStepCompleted(1)
+              ? 'border-emerald-200/60 shadow-[0_2px_8px_rgba(0,0,0,0.04)]'
+              : getActiveStep() === 1 && !isStepCompleted(1)
+              ? 'border-emerald-400/80 shadow-[0_2px_8px_rgba(16,185,129,0.2)]'
+              : 'border-slate-200/60 shadow-[0_2px_8px_rgba(0,0,0,0.04)]'
+          } ${
+            doorEnabled && !isStepCompleted(1) && getActiveStep() !== 1
+              ? 'hover:border-emerald-400/80 hover:shadow-[0_2px_8px_rgba(16,185,129,0.2)] hover:before:absolute hover:before:inset-[-3px] hover:before:rounded-2xl hover:before:bg-[conic-gradient(from_0deg,rgba(16,185,129,0.3)_0deg,rgba(16,185,129,1)_90deg,rgba(16,185,129,0.3)_180deg,rgba(16,185,129,1)_270deg,rgba(16,185,129,0.3)_360deg)] hover:before:animate-[border-spin_2s_linear_infinite] hover:before:pointer-events-none hover:before:z-[-1] hover:after:absolute hover:after:inset-0 hover:after:rounded-2xl hover:after:bg-white/90 hover:after:backdrop-blur-md cursor-pointer'
+              : ''
+          }`}
+        >
           {isStepCompleted(1) && (
             <div className={`absolute top-2 right-2 w-6 h-6 bg-gradient-to-br from-emerald-500 via-green-500 to-teal-600 rounded-full flex items-center justify-center shadow-[0_2px_6px_rgba(16,185,129,0.4)] ring-2 ring-emerald-100/50 transition-all duration-500 ${
               justCompleted.has(1)
@@ -368,61 +302,10 @@ function WizardView({
             </div>
           )}
           <div className="flex items-center text-sm font-bold mb-2 text-slate-800">
-            {getActiveStep() === 1 && (
+            {(getActiveStep() === 1 || isEditingDoor) && (
               <span className="mr-1.5 text-blue-600 text-sm animate-pulse">▶</span>
             )}
-            <span className="bg-gradient-to-r from-slate-800 to-slate-700 bg-clip-text text-transparent">Step 1. Validation</span>
-          </div>
-          <div className="space-y-2 flex-1 flex flex-col">
-            <label className="block text-xs mb-1 text-slate-600 font-medium leading-relaxed">We found similar addresses. Please select the correct one to continue.</label>
-            <select
-              value={address.selectedAddress || ''}
-              onChange={(e) => handleAddressSelect(e.target.value)}
-              onFocus={() => setIsSelectFocused(true)}
-              onBlur={() => setIsSelectFocused(false)}
-              className="w-full px-3 py-2 bg-white/95 backdrop-blur-sm border border-slate-300/60 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-400/60 transition-all shadow-[0_1px_3px_rgba(0,0,0,0.1)] hover:shadow-[0_2px_6px_rgba(0,0,0,0.15)] hover:border-slate-400/60 font-medium text-slate-700"
-            >
-              <option value="">Select an address...</option>
-              {searchAddresses.map((addr, idx) => (
-                <option key={idx} value={addr}>
-                  {addr}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-
-        {/* Place Door Step */}
-        <div 
-          ref={step2Ref}
-          className={`p-3 bg-white/90 backdrop-blur-md rounded-2xl border transition-all duration-500 flex flex-col relative ${
-            !doorEnabled ? 'opacity-60' : ''
-          } ${
-            justCompleted.has(2) 
-              ? 'border-emerald-400/80 shadow-[0_0_0_4px_rgba(16,185,129,0.2),0_4px_20px_rgba(16,185,129,0.3)] bg-gradient-to-br from-emerald-50/50 to-white/90 scale-[1.02]' 
-              : isStepCompleted(2)
-              ? 'border-emerald-200/60 shadow-[0_2px_8px_rgba(0,0,0,0.04)]'
-              : 'border-slate-200/60 shadow-[0_2px_8px_rgba(0,0,0,0.04)]'
-          }`}
-        >
-          {isStepCompleted(2) && (
-            <div className={`absolute top-2 right-2 w-6 h-6 bg-gradient-to-br from-emerald-500 via-green-500 to-teal-600 rounded-full flex items-center justify-center shadow-[0_2px_6px_rgba(16,185,129,0.4)] ring-2 ring-emerald-100/50 transition-all duration-500 ${
-              justCompleted.has(2)
-                ? 'animate-[bounce_0.6s_ease-out,scale_0.8s_ease-out] scale-125 ring-4 ring-emerald-200/60'
-                : 'scale-100'
-            }`}>
-              <svg className={`w-4 h-4 text-white transition-all duration-300 ${
-                justCompleted.has(2) ? 'animate-[checkmark_0.5s_ease-out_0.2s_both]' : ''
-              }`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-              </svg>
-            </div>
-          )}
-          <div className="flex items-center text-sm font-bold mb-2 text-slate-800">
-            {(getActiveStep() === 2 || isEditingDoor) && (
-              <span className="mr-1.5 text-blue-600 text-sm animate-pulse">▶</span>
-            )}
-            <span className="bg-gradient-to-r from-slate-800 to-slate-700 bg-clip-text text-transparent">Step 2. Placing Door</span>
+            <span className="bg-gradient-to-r from-slate-800 to-slate-700 bg-clip-text text-transparent">Step 1. Place Door</span>
           </div>
           <div className="text-xs text-slate-600 flex-1 flex items-center leading-relaxed font-medium">
             {address.doorPosition ? (
@@ -441,33 +324,39 @@ function WizardView({
         </div>
 
         {/* Scenarios Step */}
-        <div ref={step3Ref} className={`p-3 bg-white/90 backdrop-blur-md rounded-2xl border transition-all duration-500 flex flex-col relative hover:shadow-[0_4px_12px_rgba(0,0,0,0.08)] ${
-          !scenariosEnabled ? 'opacity-60' : 'hover:scale-[1.01]'
+        <div ref={step2Ref} className={`p-3 bg-white/90 backdrop-blur-md rounded-2xl border transition-all duration-500 flex flex-col relative hover:shadow-[0_4px_12px_rgba(0,0,0,0.08)] ${
+          !scenariosEnabled ? 'opacity-60' : 'hover:scale-[1.01] cursor-pointer'
         } ${
-          justCompleted.has(3) 
+          justCompleted.has(2) 
             ? 'border-emerald-400/80 shadow-[0_0_0_4px_rgba(16,185,129,0.2),0_4px_20px_rgba(16,185,129,0.3)] bg-gradient-to-br from-emerald-50/50 to-white/90 scale-[1.02]' 
-            : isStepCompleted(3)
+            : isStepCompleted(2)
             ? 'border-emerald-200/60 shadow-[0_2px_8px_rgba(0,0,0,0.04)]'
+            : getActiveStep() === 2 && !isStepCompleted(2)
+            ? 'border-emerald-400/80 shadow-[0_2px_8px_rgba(16,185,129,0.2)]'
             : 'border-slate-200/60 shadow-[0_2px_8px_rgba(0,0,0,0.04)]'
-        } hover:border-slate-300/60`}>
-          {isStepCompleted(3) && (
+        } ${
+          scenariosEnabled && !isStepCompleted(2) && getActiveStep() !== 2
+            ? 'hover:border-emerald-400/80 hover:shadow-[0_2px_8px_rgba(16,185,129,0.2)] hover:before:absolute hover:before:inset-[-3px] hover:before:rounded-2xl hover:before:bg-[conic-gradient(from_0deg,rgba(16,185,129,0.3)_0deg,rgba(16,185,129,1)_90deg,rgba(16,185,129,0.3)_180deg,rgba(16,185,129,1)_270deg,rgba(16,185,129,0.3)_360deg)] hover:before:animate-[border-spin_2s_linear_infinite] hover:before:pointer-events-none hover:before:z-[-1] hover:after:absolute hover:after:inset-0 hover:after:rounded-2xl hover:after:bg-white/90 hover:after:backdrop-blur-md'
+            : ''
+        }`}>
+          {isStepCompleted(2) && (
             <div className={`absolute top-2 right-2 w-6 h-6 bg-gradient-to-br from-emerald-500 via-green-500 to-teal-600 rounded-full flex items-center justify-center shadow-[0_2px_6px_rgba(16,185,129,0.4)] ring-2 ring-emerald-100/50 transition-all duration-500 ${
-              justCompleted.has(3)
+              justCompleted.has(2)
                 ? 'animate-[bounce_0.6s_ease-out,scale_0.8s_ease-out] scale-125 ring-4 ring-emerald-200/60'
                 : 'scale-100'
             }`}>
               <svg className={`w-4 h-4 text-white transition-all duration-300 ${
-                justCompleted.has(3) ? 'animate-[checkmark_0.5s_ease-out_0.2s_both]' : ''
+                justCompleted.has(2) ? 'animate-[checkmark_0.5s_ease-out_0.2s_both]' : ''
               }`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
               </svg>
             </div>
           )}
           <div className="flex items-center text-sm font-bold mb-2 text-slate-800">
-            {getActiveStep() === 3 && !activeScenario && !isEditingDoor && (
+            {getActiveStep() === 2 && !activeScenario && !isEditingDoor && (
               <span className="mr-1.5 text-blue-600 text-sm animate-pulse">▶</span>
             )}
-            <span className="bg-gradient-to-r from-slate-800 to-slate-700 bg-clip-text text-transparent">Step 3. Draw Path</span>
+            <span className="bg-gradient-to-r from-slate-800 to-slate-700 bg-clip-text text-transparent">Step 2. Draw Path</span>
           </div>
           <div className="flex items-center justify-between mb-2">
             <label className="block text-xs text-slate-600 font-medium leading-relaxed">There are 4 scenarios, each represents a path.</label>
@@ -531,33 +420,39 @@ function WizardView({
         </div>
 
         {/* Parking Spot Step */}
-        <div ref={step4Ref} className={`p-3 bg-white/90 backdrop-blur-md rounded-2xl border transition-all duration-500 flex flex-col relative hover:shadow-[0_4px_12px_rgba(0,0,0,0.08)] ${
-          !parkingEnabled ? 'opacity-60' : 'hover:scale-[1.01]'
+        <div ref={step3Ref} className={`p-3 bg-white/90 backdrop-blur-md rounded-2xl border transition-all duration-500 flex flex-col relative hover:shadow-[0_4px_12px_rgba(0,0,0,0.08)] ${
+          !parkingEnabled ? 'opacity-60' : 'hover:scale-[1.01] cursor-pointer'
         } ${
-          justCompleted.has(4) 
+          justCompleted.has(3) 
             ? 'border-emerald-400/80 shadow-[0_0_0_4px_rgba(16,185,129,0.2),0_4px_20px_rgba(16,185,129,0.3)] bg-gradient-to-br from-emerald-50/50 to-white/90 scale-[1.02]' 
-            : isStepCompleted(4)
+            : isStepCompleted(3)
             ? 'border-emerald-200/60 shadow-[0_2px_8px_rgba(0,0,0,0.04)]'
+            : getActiveStep() === 3 && !isStepCompleted(3)
+            ? 'border-emerald-400/80 shadow-[0_2px_8px_rgba(16,185,129,0.2)]'
             : 'border-slate-200/60 shadow-[0_2px_8px_rgba(0,0,0,0.04)]'
-        } hover:border-slate-300/60`}>
-          {isStepCompleted(4) && (
+        } ${
+          parkingEnabled && !isStepCompleted(3) && getActiveStep() !== 3
+            ? 'hover:border-emerald-400/80 hover:shadow-[0_2px_8px_rgba(16,185,129,0.2)] hover:before:absolute hover:before:inset-[-3px] hover:before:rounded-2xl hover:before:bg-[conic-gradient(from_0deg,rgba(16,185,129,0.3)_0deg,rgba(16,185,129,1)_90deg,rgba(16,185,129,0.3)_180deg,rgba(16,185,129,1)_270deg,rgba(16,185,129,0.3)_360deg)] hover:before:animate-[border-spin_2s_linear_infinite] hover:before:pointer-events-none hover:before:z-[-1] hover:after:absolute hover:after:inset-0 hover:after:rounded-2xl hover:after:bg-white/90 hover:after:backdrop-blur-md'
+            : ''
+        }`}>
+          {isStepCompleted(3) && (
             <div className={`absolute top-2 right-2 w-6 h-6 bg-gradient-to-br from-emerald-500 via-green-500 to-teal-600 rounded-full flex items-center justify-center shadow-[0_2px_6px_rgba(16,185,129,0.4)] ring-2 ring-emerald-100/50 transition-all duration-500 ${
-              justCompleted.has(4)
+              justCompleted.has(3)
                 ? 'animate-[bounce_0.6s_ease-out,scale_0.8s_ease-out] scale-125 ring-4 ring-emerald-200/60'
                 : 'scale-100'
             }`}>
               <svg className={`w-4 h-4 text-white transition-all duration-300 ${
-                justCompleted.has(4) ? 'animate-[checkmark_0.5s_ease-out_0.2s_both]' : ''
+                justCompleted.has(3) ? 'animate-[checkmark_0.5s_ease-out_0.2s_both]' : ''
               }`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
               </svg>
             </div>
           )}
           <div className="flex items-center text-sm font-bold mb-2 text-slate-800">
-            {getActiveStep() === 4 && (
+            {getActiveStep() === 3 && (
               <span className="mr-1.5 text-blue-600 text-sm animate-pulse">▶</span>
             )}
-            <span className="bg-gradient-to-r from-slate-800 to-slate-700 bg-clip-text text-transparent">Step 4. Parking Spot</span>
+            <span className="bg-gradient-to-r from-slate-800 to-slate-700 bg-clip-text text-transparent">Step 3. Parking Spot</span>
           </div>
           <div className="text-xs text-slate-600 flex-1 flex items-center font-medium">
             {address.parkingSpotSet ? (
